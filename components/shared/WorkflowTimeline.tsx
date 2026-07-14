@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
-import { Goal, ClipboardCheck, UserCheck, Calendar, Bot, TrendingUp, type LucideIcon } from 'lucide-react';
+import { UserPlus, Users, UserCheck, Compass, Map, TrendingUp, Award, type LucideIcon } from 'lucide-react';
 
 interface WorkflowStep {
   number: string;
@@ -13,39 +13,45 @@ interface WorkflowStep {
 const steps: WorkflowStep[] = [
   {
     number: '01',
-    title: 'Goal',
-    description: 'Set your target companies, desired roles, and timeline benchmarks.',
-    icon: Goal,
+    title: 'Create Account',
+    description: 'Register your profile and establish authentication.',
+    icon: UserPlus,
   },
   {
     number: '02',
-    title: 'Assessment',
-    description: 'Take adaptive diagnostic tests to identify baseline skill levels.',
-    icon: ClipboardCheck,
+    title: 'Join Workspace',
+    description: 'Enter the access code provided by your faculty advisor.',
+    icon: Users,
   },
   {
     number: '03',
-    title: 'Learning Profile',
-    description: 'Unlock your real-time skills blueprint indicating target gaps.',
+    title: 'Complete Profile',
+    description: 'Fill in your target graduation year, resume draft, and tech skills.',
     icon: UserCheck,
   },
   {
     number: '04',
-    title: 'Mission Planner',
-    description: 'Tackle daily bite-sized microlearning study missions.',
-    icon: Calendar,
+    title: 'Discover Companies',
+    description: 'Explore hiring timelines, patterns, and specific profiles.',
+    icon: Compass,
   },
   {
     number: '05',
-    title: 'AI Mentor',
-    description: 'Review coding problems and simulate mock technical interviews.',
-    icon: Bot,
+    title: 'Build Preparation Plan',
+    description: 'Select your linear preparation roadmap containing targeted modules.',
+    icon: Map,
   },
   {
     number: '06',
-    title: 'Continuous Growth',
-    description: 'Measure progress trends and build placement readiness.',
+    title: 'Practice & Track Progress',
+    description: 'Complete practice assessments and trace metrics in real time.',
     icon: TrendingUp,
+  },
+  {
+    number: '07',
+    title: 'Placement Ready',
+    description: 'Complete mock interviews and optimize resume score for submission.',
+    icon: Award,
   },
 ];
 

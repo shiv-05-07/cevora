@@ -20,8 +20,10 @@ export function Navbar() {
 
   const navLinks = [
     { label: 'Features', href: '#features' },
-    { label: 'About', href: '#about' },
+    { label: 'Solutions', href: '#solutions' },
+    { label: 'For Faculty', href: '#faculty' },
     { label: 'Roadmap', href: '#roadmap' },
+    { label: 'About', href: '#about' },
   ];
 
   return (

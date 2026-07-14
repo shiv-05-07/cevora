@@ -21,32 +21,50 @@ export function Footer() {
         </div>
 
         {/* Dynamic footer links */}
-        <nav className="flex items-center gap-6 flex-wrap justify-center">
-          <a
-            href="#docs"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:underline"
-          >
-            Documentation
-          </a>
-          <a
-            href="#github"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:underline"
-          >
-            GitHub
-          </a>
-          <a
-            href="#privacy"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:underline"
-          >
-            Privacy Policy
-          </a>
-          <a
-            href="#terms"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:underline"
-          >
-            Terms of Service
-          </a>
-        </nav>
+        <div className="flex flex-col sm:flex-row gap-6 md:gap-12 flex-wrap items-center">
+          <div className="flex flex-col items-center sm:items-start gap-1">
+            <span className="text-xs font-semibold text-foreground uppercase tracking-wider">Quick Links</span>
+            <div className="flex gap-4 mt-1 flex-wrap justify-center sm:justify-start">
+              <a href="#features" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Features</a>
+              <a href="#solutions" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Solutions</a>
+              <a href="#faculty" className="text-xs text-muted-foreground hover:text-foreground transition-colors">For Faculty</a>
+              <a href="#roadmap" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Roadmap</a>
+              <a href="#about" className="text-xs text-muted-foreground hover:text-foreground transition-colors">About</a>
+            </div>
+          </div>
+          <div className="flex items-center gap-6 mt-4 sm:mt-0">
+            <a
+              href="#docs"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:underline"
+            >
+              Documentation
+            </a>
+            <a
+              href="#github"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:underline"
+            >
+              GitHub
+            </a>
+            <a
+              href="#privacy"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:underline"
+            >
+              Privacy
+            </a>
+            <a
+              href="#terms"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:underline"
+            >
+              Terms
+            </a>
+            <a
+              href="#contact"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:underline"
+            >
+              Contact
+            </a>
+          </div>
+        </div>
       </div>
 
       {/* Copyright stamp */}

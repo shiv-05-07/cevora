@@ -5,23 +5,23 @@
  */
 export const APP_CONFIG = {
   name: 'Cevora',
-  tagline: 'AI-Powered Placement Intelligence',
+  tagline: 'Placement Intelligence Platform',
   description:
-    'Master your technical interviews. Cevora accelerates placement readiness for engineering students using AI-guided adaptive assessments, targeted daily study missions, and live diagnostic profiles.',
+    'Prepare smarter for campus placements. Cevora organizes company-specific preparation, resume analysis, linear roadmaps, and mock interview practice in a collaborative workspace.',
   version: '0.1.0-mvp',
   url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   metadata: {
-    title: 'Cevora | AI-Powered Placement Intelligence',
+    title: 'Cevora | Placement Intelligence Platform',
     description:
-      'Master technical interviews and campus placements. Cevora provides AI-guided adaptive assessments, targeted daily micro-learning missions, and detailed skill diagnostic tracking.',
+      'Prepare smarter for campus placements. Cevora organizes company-specific preparation, resume analysis, linear roadmaps, and mock interview practice in a collaborative workspace.',
     keywords: [
       'placement preparation',
-      'AI learning platform',
-      'microlearning',
+      'placement intelligence',
+      'resume optimization',
       'campus placements',
-      'adaptive assessments',
       'coding interview prep',
-      'career mentor',
+      'faculty workspace',
+      'mock interview',
     ],
   },
 };
