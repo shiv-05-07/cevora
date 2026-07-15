@@ -59,7 +59,7 @@ components/
 Button, Card, Badge, Avatar, Input, Textarea, Select, Checkbox,
 RadioGroup, Switch, Slider, Progress, Separator, Tabs, Accordion,
 Tooltip, Popover, Dialog, Sheet, Dropdown, Pagination, Table,
-ScrollArea, Skeleton, Spinner, EmptyState, Alert, Toast,
+ScrollArea, Skeleton, Spinner, EmptyState, Alert, Toast, Sonner,
 Banner, Chip, Divider, FileUploader, Typography.
 
 Rules:
@@ -106,10 +106,15 @@ StatusBadge
 Dashboard:
 - WelcomeBanner
 - DashboardStatCard
+- MetricCard
+- SectionCard
+- QuickActionCard
 - DailyGoalCard
 - ResumeHealthCard
 - RecommendationCard
 - ActivityFeed
+- ProgressRing
+- StatusBadge
 
 Companies:
 - CompanyCard
