@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 import { APP_CONFIG } from '@/constants/app';
-import { Navbar } from '@/components/shared/Navbar';
+import { LandingHeader } from '@/components/landing/LandingHeader';
 import { SectionHeader } from '@/components/shared/SectionHeader';
 import { FeatureCard } from '@/components/shared/FeatureCard';
 import { WorkflowTimeline } from '@/components/shared/WorkflowTimeline';
@@ -137,7 +137,7 @@ export default function LandingPage() {
   return (
     <div className="flex-1 flex flex-col min-h-screen">
       {/* 1. Sticky Navigation Header */}
-      <Navbar />
+      <LandingHeader />
 
       {/* Main Container */}
       <main className="flex-1 flex flex-col">
