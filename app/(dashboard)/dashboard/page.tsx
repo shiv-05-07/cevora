@@ -39,22 +39,7 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
-// --- Local Components (Used Multiple Times) ---
-
-function TimelineItem({ title, time, isLast }: { title: string; time: string; isLast?: boolean }) {
-  return (
-    <div className="relative pl-6 pb-4">
-      {!isLast && (
-        <div className="absolute left-2 top-2 bottom-0 w-[1px] bg-border/80 dark:bg-border/40" />
-      )}
-      <div className="absolute left-1 top-1.5 w-2 h-2 rounded-full bg-primary ring-4 ring-background" />
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
-        <p className="text-sm font-medium text-foreground">{title}</p>
-        <span className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">{time}</span>
-      </div>
-    </div>
-  );
-}
+import { ActivityFeed } from '@/components/shared/ActivityFeed';
 
 // --- Main Page Component ---
 
@@ -161,24 +146,28 @@ export default function DashboardPage() {
                 description="Improve ATS score by 8%" 
                 icon={FileSearch} 
                 href="/resume" 
+                actionText="Analyze Resume"
               />
               <QuickActionCard 
                 title="Practice DSA" 
                 description="Arrays & Graphs need revision" 
                 icon={Code} 
                 href="/oa-practice" 
+                actionText="Practice OA"
               />
               <QuickActionCard 
                 title="AI Mentor" 
                 description="Ask questions or request study plans" 
                 icon={Bot} 
                 href="/mentor" 
+                actionText="Ask Mentor"
               />
               <QuickActionCard 
                 title="Mock Interview" 
                 description="Behavioral Interview pending" 
                 icon={Video} 
                 href="/interview" 
+                actionText="Start Interview"
               />
             </div>
           </div>
@@ -264,9 +253,9 @@ export default function DashboardPage() {
           <div>
             <h3 className="text-lg font-bold tracking-tight mb-4">Quick Tools</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <QuickActionCard title="Companies Explorer" description="Find hiring companies" icon={Building2} href="/companies" />
-              <QuickActionCard title="Placement Roadmaps" description="Track your curriculum" icon={Map} href="/roadmaps" />
-              <QuickActionCard title="AI Mentor" description="Get instant answers" icon={Bot} href="/mentor" />
+              <QuickActionCard title="Companies Explorer" description="Find hiring companies" icon={Building2} href="/companies" actionText="Explore Companies" />
+              <QuickActionCard title="Placement Roadmaps" description="Track your curriculum" icon={Map} href="/roadmaps" actionText="View Roadmaps" />
+              <QuickActionCard title="AI Mentor" description="Get instant answers" icon={Bot} href="/mentor" actionText="Ask Mentor" />
             </div>
           </div>
           
@@ -361,11 +350,13 @@ export default function DashboardPage() {
           {/* Recent Activity */}
           <SectionCard title="Recent Activity" variant="compact">
             <div className="pt-2">
-              <TimelineItem title="Completed Resume Analysis" time="2h ago" />
-              <TimelineItem title="Solved 14 Problems" time="5h ago" />
-              <TimelineItem title="Finished Mock Interview" time="Yesterday" />
-              <TimelineItem title="Started Amazon Roadmap" time="Yesterday" />
-              <TimelineItem title="Downloaded Resume Report" time="2 days ago" isLast />
+              <ActivityFeed items={[
+                { id: '1', title: 'Completed Resume Analysis', timestamp: '2h ago' },
+                { id: '2', title: 'Solved 14 Problems', timestamp: '5h ago' },
+                { id: '3', title: 'Finished Mock Interview', timestamp: 'Yesterday' },
+                { id: '4', title: 'Started Amazon Roadmap', timestamp: 'Yesterday' },
+                { id: '5', title: 'Downloaded Resume Report', timestamp: '2 days ago' },
+              ]} />
             </div>
           </SectionCard>
 

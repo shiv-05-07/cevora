@@ -100,6 +100,12 @@ MetricCard
 InfoCard
 ProgressOverview
 StatusBadge
+FilterBar
+Combobox
+DataTable
+SearchInput
+FileUploader
+ActivityFeed
 
 ### Feature Components
 
@@ -112,7 +118,6 @@ Dashboard:
 - DailyGoalCard
 - ResumeHealthCard
 - RecommendationCard
-- ActivityFeed
 - ProgressRing
 - StatusBadge
 

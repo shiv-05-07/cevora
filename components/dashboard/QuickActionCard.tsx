@@ -15,6 +15,7 @@ export interface QuickActionCardProps {
   onClick?: () => void;
   disabled?: boolean;
   className?: string;
+  actionText?: string;
 }
 
 export function QuickActionCard({
@@ -25,6 +26,7 @@ export function QuickActionCard({
   onClick,
   disabled = false,
   className,
+  actionText = "Get Started",
 }: QuickActionCardProps) {
   const isLink = !!href && !disabled;
   const isButton = !!onClick && !disabled;
@@ -34,7 +36,7 @@ export function QuickActionCard({
     <Card
       className={cn(
         'group relative overflow-hidden p-6 transition-all duration-300 border-border/60 bg-card',
-        isClickable && 'hover:border-primary/30 hover:shadow-md cursor-pointer',
+        isClickable && 'hover:border-primary/30 hover:shadow-md hover:-translate-y-1 cursor-pointer',
         disabled && 'opacity-60 cursor-not-allowed',
         className
       )}
@@ -43,7 +45,7 @@ export function QuickActionCard({
         <div
           className={cn(
             'flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors duration-300',
-            isClickable && 'group-hover:bg-primary group-hover:text-primary-foreground'
+            isClickable && 'group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110'
           )}
         >
           <Icon className="h-6 w-6" />
@@ -57,7 +59,7 @@ export function QuickActionCard({
         
         {isClickable && (
           <div className="mt-auto pt-2 flex items-center text-xs font-semibold text-primary/80 group-hover:text-primary transition-colors">
-            Get Started
+            {actionText}
             <ArrowRight className="ml-1.5 h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
           </div>
         )}
