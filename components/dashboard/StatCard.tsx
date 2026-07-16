@@ -28,8 +28,8 @@ export function StatCard({
   return (
     <Card 
       className={cn(
-        'group overflow-hidden relative transition-all duration-300 border-border/60 bg-card hover:border-primary/30 hover:shadow-md hover:-translate-y-1',
-        isClickable && 'cursor-pointer',
+        'group overflow-hidden relative transition-all duration-300 border-border/60 bg-card',
+        isClickable && 'cursor-pointer hover:border-primary/30 hover:shadow-md hover:-translate-y-1',
         className
       )} 
       {...props}
@@ -38,8 +38,8 @@ export function StatCard({
         <div className="flex items-center justify-between space-y-0 pb-2">
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider select-none">{title}</p>
           {Icon && (
-            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground shrink-0">
-              <Icon className="w-4.5 h-4.5" />
+            <div className="w-10 h-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground shrink-0">
+              <Icon className="w-5 h-5" />
             </div>
           )}
         </div>
