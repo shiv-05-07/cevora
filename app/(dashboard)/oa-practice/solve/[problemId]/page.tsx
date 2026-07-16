@@ -11,6 +11,7 @@ import { SolveHeader } from '@/components/oa/solve/SolveHeader';
 import { ProblemDescription } from '@/components/oa/solve/ProblemDescription';
 import { CodeEditor } from '@/components/oa/solve/CodeEditor';
 import { TestCasesPanel } from '@/components/oa/solve/TestCasesPanel';
+import { useJudge } from '@/hooks/useJudge';
 
 export default function SolvePage() {
   const params = useParams();
@@ -21,10 +22,8 @@ export default function SolvePage() {
   const [language, setLanguage] = React.useState('javascript');
   const [code, setCode] = React.useState('');
   
-  const [isRunning, setIsRunning] = React.useState(false);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [executionResult, setExecutionResult] = React.useState<any>(null);
   const [isTestPanelExpanded, setIsTestPanelExpanded] = React.useState(true);
+  const { status, lastAction, logs, runResult, submitResult, progress, executeRun, executeSubmit, reset } = useJudge();
 
   React.useEffect(() => {
     // In a real app, this would fetch from an API
@@ -44,58 +43,28 @@ export default function SolvePage() {
   React.useEffect(() => {
     if (problem) {
       setCode(problem.starterCode[language as keyof typeof problem.starterCode] || '');
+      reset();
     }
-  }, [language, problem]);
+  }, [language, problem, reset]);
 
   const handleRun = () => {
-    setIsRunning(true);
-    setExecutionResult(null);
+    if (!problem) return;
     setIsTestPanelExpanded(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsRunning(false);
-      setExecutionResult({
-        status: 'Accepted',
-        runtime: '42 ms',
-        memory: '34.2 MB',
-      });
-      toast.success('Run successful');
-    }, 1500);
+    executeRun(problem.testCases);
   };
 
   const handleSubmit = () => {
-    setIsSubmitting(true);
-    setExecutionResult(null);
+    if (!problem) return;
     setIsTestPanelExpanded(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      // Randomly succeed or fail for demo purposes
-      const success = Math.random() > 0.4;
-      if (success) {
-        setExecutionResult({
-          status: 'Accepted',
-          runtime: '45 ms',
-          memory: '34.5 MB',
-        });
-        toast.success('Solution Accepted!');
-      } else {
-        setExecutionResult({
-          status: 'Wrong Answer',
-          output: '[2,3]',
-          runtime: 'N/A',
-          memory: 'N/A',
-        });
-        toast.error('Wrong Answer on test case 1');
-      }
-    }, 2000);
+    executeSubmit(language);
   };
 
   if (!problem) {
     return <div className="flex h-[calc(100vh-4rem)] items-center justify-center">Loading...</div>;
   }
+
+  const isRunning = status === 'Running';
+  const isSubmitting = status === 'Submitting';
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] md:h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] -mx-4 md:-mx-8 -mt-6">
@@ -151,8 +120,12 @@ export default function SolvePage() {
               >
                 <TestCasesPanel
                   testCases={problem.testCases}
-                  executionResult={executionResult}
-                  onClearResult={() => setExecutionResult(null)}
+                  status={status}
+                  lastAction={lastAction}
+                  logs={logs}
+                  runResult={runResult}
+                  submitResult={submitResult}
+                  progress={progress}
                   isExpanded={isTestPanelExpanded}
                   onToggleExpand={() => setIsTestPanelExpanded(!isTestPanelExpanded)}
                 />
