@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Logo } from '@/components/shared/Logo';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { OverlaySidebar } from '@/components/shared/OverlaySidebar';
-import { LANDING_NAVIGATION, WORKSPACE_NAVIGATION } from '@/constants/navigation';
+import { MAIN_NAVIGATION } from '@/constants/navigation';
 import { cn } from '@/lib/utils';
 
 export function LandingHeader({ className }: { className?: string }) {
@@ -22,8 +22,7 @@ export function LandingHeader({ className }: { className?: string }) {
         <div className="flex items-center gap-3">
           <OverlaySidebar
             navigationGroups={[
-              { title: 'Platform', items: LANDING_NAVIGATION },
-              { title: 'Workspace', items: WORKSPACE_NAVIGATION }
+              { title: '', items: MAIN_NAVIGATION }
             ]}
             showWorkspaceCard={false}
             showUserFooter={false}

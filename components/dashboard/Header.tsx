@@ -7,7 +7,7 @@ import { GlobalSearch } from './GlobalSearch';
 import { NotificationDropdown } from './NotificationDropdown';
 import { UserMenu } from './UserMenu';
 import { cn } from '@/lib/utils';
-import { LANDING_NAVIGATION, WORKSPACE_NAVIGATION } from '@/constants/navigation';
+import { MAIN_NAVIGATION } from '@/constants/navigation';
 
 export function Header({ className }: { className?: string }) {
   return (
@@ -23,8 +23,7 @@ export function Header({ className }: { className?: string }) {
         <OverlaySidebar
           triggerClassName="md:hidden"
           navigationGroups={[
-            { title: 'Platform', items: LANDING_NAVIGATION },
-            { title: 'Workspace', items: WORKSPACE_NAVIGATION }
+            { title: '', items: MAIN_NAVIGATION }
           ]}
           showWorkspaceCard={true}
           showUserFooter={true}

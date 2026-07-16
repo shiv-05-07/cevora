@@ -13,10 +13,9 @@ import {
 import { APP_CONFIG } from '@/constants/app';
 import { useSidebar } from '@/providers/SidebarProvider';
 import { useWorkspace } from '@/providers/WorkspaceProvider';
-import { LANDING_NAVIGATION, WORKSPACE_NAVIGATION } from '@/constants/navigation';
+import { MAIN_NAVIGATION } from '@/constants/navigation';
 import { WorkspaceCard } from './WorkspaceCard';
 import { SidebarNavItem } from './SidebarNavItem';
-import { SidebarSection } from './SidebarSection';
 import { ThemeToggle } from './ThemeToggle';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -83,41 +82,23 @@ export function Sidebar({ className }: { className?: string }) {
       </div>
 
       {/* Navigation List */}
-      <nav className="flex-1 overflow-y-auto px-2.5 py-4 space-y-4 scrollbar-none">
-        <SidebarSection title="Platform" isExpanded={isExpanded}>
-          {LANDING_NAVIGATION.map((link) => {
-            const isLandingAnchor = link.href.startsWith('#');
-            const isActive = isLandingAnchor 
-              ? false
-              : (pathname === link.href || (pathname !== '/' && pathname?.startsWith(link.href + '/')));
-            return (
-              <SidebarNavItem
-                key={link.label}
-                label={link.label}
-                href={link.href}
-                icon={link.icon}
-                isExpanded={isExpanded}
-                isActive={isActive}
-              />
-            );
-          })}
-        </SidebarSection>
-
-        <SidebarSection title="Workspace" isExpanded={isExpanded}>
-          {WORKSPACE_NAVIGATION.map((link) => {
-            const isActive = pathname === link.href || pathname?.startsWith(link.href + '/');
-            return (
-              <SidebarNavItem
-                key={link.label}
-                label={link.label}
-                href={link.href}
-                icon={link.icon}
-                isExpanded={isExpanded}
-                isActive={isActive}
-              />
-            );
-          })}
-        </SidebarSection>
+      <nav className="flex-1 overflow-y-auto px-2.5 py-4 space-y-1 scrollbar-none">
+        {MAIN_NAVIGATION.map((link) => {
+          const isLandingAnchor = link.href.startsWith('#');
+          const isActive = isLandingAnchor 
+            ? false
+            : (pathname === link.href || (pathname !== '/' && pathname?.startsWith(link.href + '/')));
+          return (
+            <SidebarNavItem
+              key={link.label}
+              label={link.label}
+              href={link.href}
+              icon={link.icon}
+              isExpanded={isExpanded}
+              isActive={isActive}
+            />
+          );
+        })}
       </nav>
 
       {/* Bottom Footer Actions */}

@@ -72,9 +72,11 @@ export function OverlaySidebar({
           <nav className="p-3 space-y-4 overflow-y-auto flex-1">
             {navigationGroups.map((group) => (
               <div key={group.title} className="space-y-1">
-                <h4 className="px-3 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 select-none">
-                  {group.title}
-                </h4>
+                {group.title && (
+                  <h4 className="px-3 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 select-none">
+                    {group.title}
+                  </h4>
+                )}
                 {group.items.map((link) => {
                   const Icon = link.icon;
                   // For landing page anchors, we check if pathname is / and href starts with #
