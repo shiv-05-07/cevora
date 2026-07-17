@@ -101,9 +101,12 @@ export default function PremiumStudyAssistantPage() {
         )}
       </section>
 
-      {/* 2. MIDDLE: CHAT INTERFACE */}
-      <section className="flex flex-col h-[500px] border rounded-xl overflow-hidden shadow-sm">
-        <div className="bg-muted/20 px-4 py-2 border-b text-sm font-semibold flex items-center justify-between">
+      {/* 2. MIDDLE: CHAT INTERFACE
+          h-[500px] gives the card a fixed height.
+          overflow-hidden clips the card border-radius properly.
+          The inner AIChatEngine uses flex-1 min-h-0 to scroll independently. */}
+      <section className="flex flex-col h-[520px] border rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-muted/20 px-4 py-2 border-b text-sm font-semibold flex items-center justify-between shrink-0">
           <span>Chat with Document</span>
           {extractedText && (
             <span className="text-xs font-medium px-2 py-1 bg-green-500/10 text-green-700 rounded-full">
@@ -111,7 +114,8 @@ export default function PremiumStudyAssistantPage() {
             </span>
           )}
         </div>
-        <div className="flex-1 overflow-hidden relative">
+        {/* flex-1 min-h-0 — lets AIChatEngine fill remaining height and manage its own scroll */}
+        <div className="flex-1 min-h-0">
           <AIChatEngine documentContext={extractedText} />
         </div>
       </section>

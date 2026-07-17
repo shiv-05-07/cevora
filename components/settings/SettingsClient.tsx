@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { User, BrainCircuit, LayoutGrid, ShieldAlert, Info } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { ProfileSection } from './ProfileSection';
 import { CareerPreferencesSection } from './CareerPreferencesSection';
 import { AIPreferencesSection } from './AIPreferencesSection';
@@ -29,9 +30,22 @@ const GROUPS = [
 ];
 
 export function SettingsClient({ initialData }: SettingsClientProps) {
+  const { theme: realTheme } = useTheme();
   const [data, setData] = React.useState<SettingsData>(initialData);
   const [isDirty, setIsDirty] = React.useState(false);
   const [activeGroup, setActiveGroup] = React.useState('account');
+
+  // Keep data.appearance.theme in sync with the real next-themes value.
+  // This ensures the correct button is highlighted on first load and when
+  // the OS system theme changes externally.
+  React.useEffect(() => {
+    if (!realTheme) return;
+    const mapped = realTheme === 'light' ? 'Light' : realTheme === 'dark' ? 'Dark' : 'System';
+    setData(prev => ({
+      ...prev,
+      appearance: { ...prev.appearance, theme: mapped as 'Light' | 'Dark' | 'System' }
+    }));
+  }, [realTheme]);
 
   React.useEffect(() => {
     const observer = new IntersectionObserver(

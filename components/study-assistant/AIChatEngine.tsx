@@ -4,9 +4,7 @@ import * as React from 'react';
 import { Send, Bot, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { DetectedRegion } from './SmartScanner';
 import {
   Select,
   SelectContent,
@@ -38,13 +36,19 @@ export function AIChatEngine({ documentContext }: AIChatEngineProps) {
   const [input, setInput] = React.useState('');
   const [mode, setMode] = React.useState<AgentMode>('doubt');
   const [isTyping, setIsTyping] = React.useState(false);
-  const scrollRef = React.useRef<HTMLDivElement>(null);
 
+  // Use a plain div ref so we can directly control scrollTop.
+  // Radix ScrollArea does NOT forward refs to the internal viewport,
+  // so the previous scrollRef.current.scrollTop approach was broken.
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom on every new message or typing indicator change
   React.useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isTyping]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,9 +58,8 @@ export function AIChatEngine({ documentContext }: AIChatEngineProps) {
     setMessages(prev => [...prev, newMessage]);
     setInput('');
     setIsTyping(true);
-    
+
     setTimeout(() => {
-      // Mock askAI logic with mode switching
       const contextLength = documentContext.length;
       let response = '';
 
@@ -92,8 +95,11 @@ export function AIChatEngine({ documentContext }: AIChatEngineProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background relative border-l border-border/60">
-      {/* Chat Header */}
+    // flex-col h-full min-h-0 — the key flex pattern for independent child scrolling.
+    // min-h-0 prevents this flex child from overflowing its parent.
+    <div className="flex flex-col h-full min-h-0 bg-background">
+
+      {/* Chat Sub-Header — shrink-0 so it never compresses */}
       <div className="px-4 h-12 border-b border-border/60 flex items-center justify-between bg-card shrink-0">
         <div className="flex items-center gap-2">
           <Bot className="w-5 h-5 text-primary" />
@@ -105,48 +111,60 @@ export function AIChatEngine({ documentContext }: AIChatEngineProps) {
         </div>
       </div>
 
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="space-y-4">
-          {messages.map((msg) => (
-            <div 
-              key={msg.id} 
-              className={cn(
-                "flex gap-3 max-w-[90%]",
-                msg.role === 'user' ? "ml-auto flex-row-reverse" : ""
-              )}
-            >
-              <div className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
-                msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-              )}>
-                {msg.role === 'user' ? <div className="text-xs font-bold">You</div> : <Bot className="w-4 h-4" />}
-              </div>
-              <div className={cn(
-                "p-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap",
-                msg.role === 'user' 
-                  ? "bg-primary text-primary-foreground rounded-tr-sm" 
-                  : "bg-muted/50 border border-border/50 text-foreground rounded-tl-sm"
-              )}>
-                {msg.content}
-              </div>
+      {/* Scrollable Messages — flex-1 min-h-0 overflow-y-auto is the correct pattern.
+          flex-1 lets it grow to fill available space.
+          min-h-0 overrides the default flex min-height so it can actually shrink and scroll.
+          overflow-y-auto enables the scroll bar only when needed. */}
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 scroll-smooth"
+        role="log"
+        aria-label="Chat messages"
+        aria-live="polite"
+      >
+        {messages.map((msg) => (
+          <div
+            key={msg.id}
+            className={cn(
+              "flex gap-3 max-w-[90%]",
+              msg.role === 'user' ? "ml-auto flex-row-reverse" : ""
+            )}
+          >
+            <div className={cn(
+              "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+              msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+            )}>
+              {msg.role === 'user' ? <div className="text-xs font-bold">You</div> : <Bot className="w-4 h-4" />}
             </div>
-          ))}
-          
-          {isTyping && (
-            <div className="flex gap-3 max-w-[85%]">
-              <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center shrink-0">
-                <Bot className="w-4 h-4" />
-              </div>
-              <div className="p-4 rounded-2xl bg-muted/50 border border-border/50 rounded-tl-sm flex items-center gap-1">
-                <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-              </div>
+            <div className={cn(
+              "p-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap",
+              msg.role === 'user'
+                ? "bg-primary text-primary-foreground rounded-tr-sm"
+                : "bg-muted/50 border border-border/50 text-foreground rounded-tl-sm"
+            )}>
+              {msg.content}
             </div>
-          )}
-        </div>
-      </ScrollArea>
+          </div>
+        ))}
 
+        {isTyping && (
+          <div className="flex gap-3 max-w-[85%]">
+            <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center shrink-0">
+              <Bot className="w-4 h-4" />
+            </div>
+            <div className="p-4 rounded-2xl bg-muted/50 border border-border/50 rounded-tl-sm flex items-center gap-1">
+              <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
+          </div>
+        )}
+
+        {/* Invisible scroll anchor — always sits at the very bottom */}
+        <div ref={messagesEndRef} aria-hidden="true" />
+      </div>
+
+      {/* Sticky Input Bar — shrink-0 ensures it is never squeezed by flex */}
       <div className="p-4 bg-background border-t border-border/60 shrink-0">
         <form onSubmit={handleSend} className="relative flex items-center">
           <div className="absolute left-2 z-10 flex items-center h-full py-1">
@@ -164,16 +182,16 @@ export function AIChatEngine({ documentContext }: AIChatEngineProps) {
             </Select>
             <div className="w-px h-6 bg-border/60 ml-1" />
           </div>
-          
-          <Input 
+
+          <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask something..."
             className="pl-[130px] pr-12 py-6 rounded-xl border-border/60 bg-muted/20 focus-visible:ring-primary/30 focus-visible:bg-background"
           />
-          <Button 
-            type="submit" 
-            size="icon" 
+          <Button
+            type="submit"
+            size="icon"
             className="absolute right-2 h-9 w-9 rounded-lg"
             disabled={!input.trim() || isTyping}
           >

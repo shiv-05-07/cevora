@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { 
@@ -27,11 +28,13 @@ import { WorkflowTimeline } from '@/components/shared/WorkflowTimeline';
 import { StudentDashboardPreview } from '@/components/shared/StudentDashboardPreview';
 import { FacultyWorkspacePreview } from '@/components/shared/FacultyWorkspacePreview';
 import { Footer } from '@/components/shared/Footer';
-import { buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { OnboardingModal } from '@/components/auth/OnboardingModal';
 import { cn } from '@/lib/utils';
 
 export default function LandingPage() {
   const shouldReduceMotion = useReducedMotion();
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
 
   // Core MVP Features to list in requested order
   const features = [
@@ -182,16 +185,16 @@ export default function LandingPage() {
                 variants={fadeInUp}
                 className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 pt-2"
               >
-                <Link
-                  href="/register"
+                <Button
+                  onClick={() => setIsModalOpen(true)}
                   className={cn(
                     buttonVariants({ variant: 'default', size: 'lg' }), 
-                    'text-xs sm:text-sm font-semibold h-11 px-6 shadow-sm active:scale-[0.98] hover:scale-[1.02] transition-all duration-200'
+                    'text-xs sm:text-sm font-semibold h-11 px-6 shadow-sm active:scale-[0.98] hover:scale-[1.02] hover:-translate-y-[1px] transition-all duration-200'
                   )}
                 >
                   Get Started
                   <ArrowRight className="w-4 h-4 ml-1.5" />
-                </Link>
+                </Button>
                 <a
                   href="#features"
                   className={cn(
@@ -524,6 +527,9 @@ export default function LandingPage() {
 
       {/* Footer component */}
       <Footer />
+
+      {/* Onboarding Modal — renders as overlay; triggered by hero Get Started */}
+      <OnboardingModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 }
