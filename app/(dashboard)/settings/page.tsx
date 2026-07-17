@@ -1,9 +1,7 @@
-'use client';
-
 import * as React from 'react';
-import { Settings } from 'lucide-react';
 import { PageHeader } from '@/components/dashboard/PageHeader';
-import { EmptyState } from '@/components/ui/empty-state';
+import { SettingsClient } from '@/components/settings/SettingsClient';
+import { mockSettings } from '@/data/mockSettings';
 
 export default function SettingsPage() {
   return (
@@ -13,13 +11,7 @@ export default function SettingsPage() {
         description="Configure active profile parameters, credentials, security credentials, and active workspaces."
       />
 
-      <EmptyState
-        icon={Settings}
-        title="Settings Workspace"
-        description="Workspace configuration preferences, account profile edits, and appearance selectors will render here."
-        actionText="Restore Defaults"
-        onActionClick={() => alert('Restoring defaults...')}
-      />
+      <SettingsClient initialData={mockSettings} />
     </div>
   );
 }

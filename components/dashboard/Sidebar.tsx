@@ -18,6 +18,7 @@ import { WorkspaceCard } from './WorkspaceCard';
 import { SidebarNavItem } from './SidebarNavItem';
 import { ThemeToggle } from './ThemeToggle';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { CevoraLogo } from '@/components/shared/CevoraLogo';
 import { cn } from '@/lib/utils';
 
 export function Sidebar({ className }: { className?: string }) {
@@ -40,19 +41,7 @@ export function Sidebar({ className }: { className?: string }) {
       {/* Top Header Logo */}
       <div className="h-14 border-b border-border/80 dark:border-border/40 flex items-center px-4 justify-between overflow-hidden">
         <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0 focus-visible:outline-none">
-          <div className="w-8 h-8 bg-primary text-primary-foreground font-extrabold text-sm flex items-center justify-center rounded-lg shadow-sm">
-            C
-          </div>
-          {isExpanded && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.15 }}
-              className="font-bold tracking-tight text-base text-foreground"
-            >
-              {APP_CONFIG.name}
-            </motion.span>
-          )}
+          <CevoraLogo iconOnly={!isExpanded} size="medium" />
         </Link>
 
         {isExpanded && (

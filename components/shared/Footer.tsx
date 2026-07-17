@@ -1,5 +1,5 @@
 import { APP_CONFIG } from '@/constants/app';
-import { Logo } from './Logo';
+import { CevoraLogo } from './CevoraLogo';
 
 /**
  * Platform footer component.
@@ -14,7 +14,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col md:flex-row items-center justify-between gap-6">
         {/* Logo and brief description */}
         <div className="flex flex-col items-center md:items-start gap-2 max-w-sm">
-          <Logo />
+          <CevoraLogo />
           <p className="text-xs text-muted-foreground text-center md:text-left mt-2 leading-relaxed">
             {APP_CONFIG.description}
           </p>

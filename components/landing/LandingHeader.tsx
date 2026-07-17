@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Logo } from '@/components/shared/Logo';
+import { CevoraLogo } from '@/components/shared/CevoraLogo';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { OverlaySidebar } from '@/components/shared/OverlaySidebar';
 import { MAIN_NAVIGATION } from '@/constants/navigation';
@@ -27,7 +27,7 @@ export function LandingHeader({ className }: { className?: string }) {
             showWorkspaceCard={false}
             showUserFooter={false}
           />
-          <Logo />
+          <CevoraLogo size="medium" />
         </div>
 
         {/* Right Side: Theme Toggle */}
