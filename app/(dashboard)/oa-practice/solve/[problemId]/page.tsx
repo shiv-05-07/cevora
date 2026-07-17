@@ -78,7 +78,6 @@ export default function SolvePage() {
       />
 
       <div className="flex-1 overflow-hidden">
-        {/* @ts-expect-error react-resizable-panels type mismatches in shadcn */}
         <ResizablePanelGroup direction="horizontal">
           
           {/* Left Pane: Problem Description */}
@@ -90,7 +89,6 @@ export default function SolvePage() {
           
           {/* Right Pane: Code Editor + Test Cases */}
           <ResizablePanel defaultSize={60}>
-            {/* @ts-expect-error react-resizable-panels type mismatches in shadcn */}
             <ResizablePanelGroup direction="vertical">
               
               {/* Code Editor */}

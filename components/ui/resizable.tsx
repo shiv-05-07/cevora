@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 function ResizablePanelGroup({
   className,
   ...props
-}: ResizablePrimitive.GroupProps) {
+}: React.ComponentProps<typeof ResizablePrimitive.Group> & { direction?: "horizontal" | "vertical" }) {
   return (
     <ResizablePrimitive.Group
       data-slot="resizable-panel-group"
