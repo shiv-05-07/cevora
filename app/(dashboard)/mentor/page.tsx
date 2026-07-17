@@ -1,25 +1,15 @@
-'use client';
+import { Metadata } from 'next';
+import { MentorClient } from '@/components/mentor/MentorClient';
 
-import * as React from 'react';
-import { Bot } from 'lucide-react';
-import { PageHeader } from '@/components/dashboard/PageHeader';
-import { EmptyState } from '@/components/ui/empty-state';
+export const metadata: Metadata = {
+  title: 'AI Career Mentor | Cevora',
+  description: 'Your personal AI career mentor for resume optimization, DSA planning, and interview preparation.',
+};
 
 export default function MentorPage() {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="AI Mentor Workspace"
-        description="Interact with a dedicated study mentor to ask syntax queries, resolve algorithm logic gaps, and request code optimizations."
-      />
-
-      <EmptyState
-        icon={Bot}
-        title="Open Mentor Session"
-        description="Initiate a dialogue session with the placement preparation mentor workspace to resolve coding bugs or explore concepts."
-        actionText="Open Session"
-        onActionClick={() => alert('Starting mentor console...')}
-      />
+    <div className="absolute inset-0 m-0 border-t border-border/40">
+      <MentorClient />
     </div>
   );
 }
