@@ -17,7 +17,7 @@ import { MAIN_NAVIGATION } from '@/constants/navigation';
 import { WorkspaceCard } from './WorkspaceCard';
 import { SidebarNavItem } from './SidebarNavItem';
 import { ThemeToggle } from './ThemeToggle';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { SidebarProfileSection } from '@/components/profile/SidebarProfileSection';
 import { CevoraLogo } from '@/components/shared/CevoraLogo';
 import { cn } from '@/lib/utils';
 
@@ -33,7 +33,7 @@ export function Sidebar({ className }: { className?: string }) {
   return (
     <aside
       className={cn(
-        'hidden md:flex flex-col h-screen fixed left-0 top-0 z-40 bg-card border-r border-border/80 dark:border-border/40 select-none transition-all duration-300 ease-in-out',
+        'hidden md:flex flex-col h-screen fixed left-0 top-0 z-40 bg-white/30 dark:bg-black/30 backdrop-blur-md border-r border-border/80 dark:border-border/40 select-none transition-all duration-300 ease-in-out',
         isExpanded ? 'w-64' : 'w-16',
         className
       )}
@@ -91,24 +91,9 @@ export function Sidebar({ className }: { className?: string }) {
       </nav>
 
       {/* Bottom Footer Actions */}
-      <div className="p-3 border-t border-border/80 dark:border-border/40 space-y-2.5 bg-card/50">
+      <div className="p-3 border-t border-border/80 dark:border-border/40 space-y-2.5 bg-transparent">
         <div className={cn('flex items-center justify-between gap-2', !isExpanded && 'flex-col items-center')}>
-          <div className="flex items-center gap-2">
-            <Avatar className="w-8 h-8 shrink-0 select-none">
-              <AvatarFallback className="text-xs uppercase font-semibold">JD</AvatarFallback>
-            </Avatar>
-            {isExpanded && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.15 }}
-                className="leading-none text-left"
-              >
-                <p className="text-xs font-bold text-foreground">John Doe</p>
-                <p className="text-[9px] text-muted-foreground capitalize font-medium">{role}</p>
-              </motion.div>
-            )}
-          </div>
+          <SidebarProfileSection isExpanded={isExpanded} />
 
           <div className="flex items-center gap-1">
             <ThemeToggle />

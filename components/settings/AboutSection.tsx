@@ -36,12 +36,7 @@ export function AboutSection() {
                   Focused on Career Intelligence and AI Mentorship.
                 </p>
               </div>
-              <div className="mt-4 pt-4 border-t border-border/40">
-                <a href="#" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  <GitBranch className="w-4 h-4" />
-                  View GitHub Repository
-                </a>
-              </div>
+
             </div>
           </div>
 
