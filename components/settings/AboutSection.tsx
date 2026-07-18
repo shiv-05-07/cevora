@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { GitBranch, Code, Users } from 'lucide-react';
 
 export function AboutSection() {
-  
+
   return (
     <section className="space-y-6">
       <Card className="bg-card border-border/50 shadow-sm transition-all duration-200 ease-out hover:border-border/60 hover:shadow-md hover:-translate-y-[2px]">
@@ -10,7 +10,7 @@ export function AboutSection() {
           <CardTitle>About Cevora</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 border border-border/50 rounded-xl bg-card">
               <div className="flex items-center gap-2 mb-2 text-sm font-semibold">
@@ -32,7 +32,7 @@ export function AboutSection() {
                   Credits
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Built for the hackathon by Shivam. 
+                  Built for the hackathon.
                   Focused on Career Intelligence and AI Mentorship.
                 </p>
               </div>

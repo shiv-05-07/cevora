@@ -36,7 +36,6 @@ export function GlobalBackground() {
         src="/bg-light.png"
         alt="Light Theme Background"
         fill
-        quality={90}
         priority
         className="object-cover transition-opacity duration-700 ease-in-out"
         style={{ opacity: isDark ? 0 : 1 }}
@@ -47,7 +46,6 @@ export function GlobalBackground() {
         src="/bg-dark.png"
         alt="Dark Theme Background"
         fill
-        quality={90}
         priority
         className="object-cover transition-opacity duration-700 ease-in-out"
         style={{ opacity: isDark ? 1 : 0 }}
