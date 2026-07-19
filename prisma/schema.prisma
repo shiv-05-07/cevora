@@ -1,0 +1,567 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ================================
+// ENUMS
+// ================================
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+}
+
+// ================================
+// USER
+// ================================
+
+model User {
+  /// UUID from Supabase auth.users
+  id String @id @db.Uuid
+
+  username  String  @unique
+  fullName  String
+  avatarUrl String?
+  bio       String?
+
+  role   UserRole      @default(STUDENT)
+  status AccountStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  studentProfile StudentProfile?
+
+  resumes        Resume[]
+  aiChats        AIChat[]
+  roadmaps       Roadmap[]
+
+  //notes          Note[]
+  //bookmarks      Bookmark[]
+
+  //notifications  Notification[]
+
+  //achievements   Achievement[]
+
+  activities     UserActivity[]
+
+  mockInterviews MockInterview[]
+  progresses UserProgress[]
+
+  @@index([role])
+  @@index([status])
+}
+
+// ================================
+// STUDENT PROFILE
+// ================================
+
+model StudentProfile {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @unique @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  college String?
+  degree String?
+  specialization String?
+
+  semester Int?
+  graduationYear Int?
+
+  cgpa Float?
+
+  targetRole String?
+  targetCompany String?
+
+  github String?
+  linkedin String?
+  portfolio String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+
+  @@index([college])
+}
+
+// ================================
+// RESUME
+// ================================
+
+enum ResumeStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Resume {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title String
+  summary String?
+
+  workExperience String?
+  education String?
+
+  skills String[]
+
+  score Int?
+
+  aiFeedback Json?
+
+  status ResumeStatus @default(DRAFT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projects ResumeProject[]
+
+  @@index([userId])
+}
+
+model ResumeProject {
+  id String @id @default(uuid()) @db.Uuid
+
+  resumeId String @db.Uuid
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  title String
+
+  description String
+
+  technologies String[]
+
+  githubUrl String?
+
+  liveUrl String?
+
+  startDate DateTime?
+
+  endDate DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([resumeId])
+}
+
+// ================================
+// ROADMAPS
+// ================================
+
+enum RoadmapCategory {
+  DSA
+  WEB_DEVELOPMENT
+  APP_DEVELOPMENT
+  AI_ML
+  DATA_SCIENCE
+  DEVOPS
+  CYBER_SECURITY
+  CLOUD
+  BLOCKCHAIN
+  UI_UX
+  APTITUDE
+}
+
+enum RoadmapDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum StepType {
+  VIDEO
+  ARTICLE
+  PROJECT
+  QUIZ
+  RESOURCE
+  PRACTICE
+}
+
+model Roadmap {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String? @db.Uuid
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title String
+  description String
+
+  category RoadmapCategory
+  difficulty RoadmapDifficulty
+
+  estimatedHours Int?
+
+  thumbnailUrl String?
+
+  isOfficial Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  steps RoadmapStep[]
+
+  progresses UserProgress[]
+
+  @@index([category])
+  @@index([difficulty])
+}
+
+model RoadmapStep {
+  id String @id @default(uuid()) @db.Uuid
+  isOptional Boolean @default(false)
+  roadmapId String @db.Uuid
+  roadmap Roadmap @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+
+  title String
+
+  description String?
+
+  type StepType
+
+  resourceUrl String?
+
+  durationMinutes Int?
+
+  order Int
+
+  createdAt DateTime @default(now())
+
+  @@index([roadmapId])
+
+  @@unique([roadmapId, order])
+}
+
+model UserProgress {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  roadmapId String @db.Uuid
+  roadmap Roadmap @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+
+  completedSteps Int @default(0)
+
+  totalSteps Int @default(0)
+
+  progress Float @default(0)
+
+  completed Boolean @default(false)
+
+  startedAt DateTime?
+
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, roadmapId])
+
+  @@index([roadmapId])
+}
+
+// ================================
+// COMPANIES
+// ================================
+
+enum OpportunityType {
+  INTERNSHIP
+  FULL_TIME
+}
+
+enum OpportunityStatus {
+  OPEN
+  CLOSED
+  UPCOMING
+}
+
+model Company {
+  id String @id @default(uuid()) @db.Uuid
+
+  name String @unique
+  tags String[] 
+  logoUrl String?
+
+  website String?
+
+  description String?
+
+  industry String?
+
+  headquarters String?
+
+  foundedYear Int?
+
+  employees Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  opportunities Opportunity[]
+
+  oaQuestions OAQuestion[]
+
+  interviewExperiences InterviewExperience[]
+
+  mockInterviews MockInterview[]
+
+  @@index([name])
+}
+
+model Opportunity {
+  id String @id @default(uuid()) @db.Uuid
+  skills String[] 
+  companyId String @db.Uuid
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  title String
+
+  description String?
+
+  location String?
+
+  type OpportunityType
+
+  status OpportunityStatus @default(OPEN)
+
+  salaryMin Int?
+  salaryMax Int?
+
+  applyUrl String?
+
+  deadline DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+
+  @@index([type])
+
+  @@index([status])
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model OAQuestion {
+  id String @id @default(uuid()) @db.Uuid
+
+  companyId String @db.Uuid
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  title String
+
+  problemStatement String
+
+  difficulty Difficulty
+
+  topic String?
+
+  solution String?
+
+  createdAt DateTime @default(now())
+
+  @@index([companyId])
+
+  @@index([difficulty])
+}
+
+model InterviewExperience {
+  id String @id @default(uuid()) @db.Uuid
+
+  companyId String @db.Uuid
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  role String
+
+  experience String
+
+  rounds Int?
+
+  result String?
+
+  postedBy String?
+
+  createdAt DateTime @default(now())
+
+  @@index([companyId])
+}
+
+// ================================
+// AI CHAT
+// ================================
+
+enum AIChatType {
+  STUDY
+  CAREER
+  RESUME
+  INTERVIEW
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model AIChat {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title String?
+
+  type AIChatType
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages AIChatMessage[]
+
+  @@index([userId])
+
+  @@index([type])
+}
+
+model AIChatMessage {
+  id String @id @default(uuid()) @db.Uuid
+
+  chatId String @db.Uuid
+  chat AIChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  role MessageRole
+
+  content String @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([chatId])
+}
+
+enum InterviewMode {
+  HR
+  TECHNICAL
+  BEHAVIORAL
+  MIXED
+}
+
+enum InterviewStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model MockInterview {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title String
+
+  companyId String? @db.Uuid
+
+  company Company? @relation(fields: [companyId], references: [id])
+
+  role String?
+
+  mode InterviewMode
+
+  difficulty Difficulty
+
+  status InterviewStatus @default(NOT_STARTED)
+
+  startedAt DateTime?
+
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  feedback InterviewFeedback?
+
+  @@index([userId])
+
+  @@index([status])
+}
+
+model InterviewFeedback {
+  id String @id @default(uuid()) @db.Uuid
+
+  interviewId String @unique @db.Uuid
+
+  interview MockInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  overallScore Int?
+
+  communication Int?
+
+  technicalKnowledge Int?
+
+  confidence Int?
+
+  problemSolving Int?
+
+  analysis Json?
+
+  createdAt DateTime @default(now())
+}
+
+enum ActivityType {
+  LOGIN
+  ROADMAP
+  AI_CHAT
+  RESUME
+  INTERVIEW
+  COMPANY
+}
+
+model UserActivity {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type ActivityType
+
+  title String
+
+  description String?
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+
+  @@index([type])
+
+  @@index([createdAt])
+}
