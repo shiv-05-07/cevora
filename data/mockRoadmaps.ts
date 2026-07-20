@@ -291,5 +291,108 @@ export const mockRoadmaps: Roadmap[] = [
         miniProjects: [], practiceLinks: []
       }
     ]
+  },
+  {
+    id: 'backend-dev',
+    title: 'Backend Developer Roadmap',
+    role: 'Backend Engineer',
+    difficulty: 'Intermediate',
+    estimatedDuration: '16 Weeks',
+    completion: 0,
+    rating: 4.8,
+    studentsEnrolled: 35000,
+    description: 'Master backend engineering with Node.js, Express, databases (SQL/NoSQL), and API design.',
+    lastUpdated: '2026-07-16',
+    streakDays: 0,
+    skills: ['Node.js', 'Express', 'PostgreSQL', 'MongoDB', 'Docker', 'Redis'],
+    prerequisites: ['Basic JavaScript'],
+    learningOutcomes: ['Design RESTful APIs', 'Manage databases', 'Implement authentication and authorization', 'Deploy applications with Docker'],
+    mentorTips: ['Focus on data modeling first. A bad schema will haunt you.', 'Always validate user input at the edge.'],
+    projects: [],
+    resources: [],
+    modules: [
+      {
+        id: 'be-m1',
+        title: 'Node.js & Express Fundamentals',
+        description: 'Learn the basics of server-side JavaScript, routing, and middleware architecture.',
+        progress: 25, estimatedTime: '3 Weeks', status: 'In Progress', completedLessons: 1, totalLessons: 4,
+        lessons: [
+          { id: 'be1', title: 'Introduction to Node.js', type: 'video', duration: '30m', isCompleted: true },
+          { id: 'be2', title: 'Building a simple Express server', type: 'practice', duration: '45m', isCompleted: false },
+          { id: 'be3', title: 'Understanding Middleware', type: 'reading', duration: '20m', isCompleted: false },
+          { id: 'be4', title: 'Error Handling in Express', type: 'video', duration: '35m', isCompleted: false }
+        ],
+        miniProjects: [], practiceLinks: []
+      }
+    ]
+  },
+  {
+    id: 'fullstack-dev',
+    title: 'Full Stack Developer Roadmap',
+    role: 'Full Stack Engineer',
+    difficulty: 'Advanced',
+    estimatedDuration: '20 Weeks',
+    completion: 0,
+    rating: 4.9,
+    studentsEnrolled: 52000,
+    description: 'Learn to build complete web applications from end to end using modern full stack frameworks.',
+    lastUpdated: '2026-07-17',
+    streakDays: 0,
+    skills: ['React', 'Node.js', 'PostgreSQL', 'Tailwind', 'Next.js'],
+    prerequisites: ['Frontend basics', 'Backend basics'],
+    learningOutcomes: ['Deploy full-stack apps', 'Handle complex authentication flows', 'Manage global state'],
+    mentorTips: ['Build projects that solve real problems to stand out in interviews.'],
+    projects: [],
+    resources: [],
+    modules: [
+      {
+        id: 'fs-m1',
+        title: 'Connecting Frontend to Backend',
+        description: 'Learn how to integrate React with a Node.js API using fetch and Axios.',
+        progress: 50, estimatedTime: '2 Weeks', status: 'In Progress', completedLessons: 2, totalLessons: 4,
+        lessons: [
+          { id: 'fs1', title: 'RESTful API Principles', type: 'reading', duration: '20m', isCompleted: true },
+          { id: 'fs2', title: 'Fetching Data in React', type: 'video', duration: '40m', isCompleted: true },
+          { id: 'fs3', title: 'Handling CORS', type: 'video', duration: '25m', isCompleted: false },
+          { id: 'fs4', title: 'Build a Fullstack Todo App', type: 'project', duration: '2h', isCompleted: false }
+        ],
+        miniProjects: [], practiceLinks: []
+      }
+    ]
+  },
+  {
+    id: 'data-engineer',
+    title: 'Data Engineer Roadmap',
+    role: 'Data Engineer',
+    difficulty: 'Advanced',
+    estimatedDuration: '18 Weeks',
+    completion: 0,
+    rating: 4.6,
+    studentsEnrolled: 21000,
+    description: 'Learn to build scalable data pipelines, data warehouses, and handle big data architecture.',
+    lastUpdated: '2026-07-18',
+    streakDays: 0,
+    skills: ['Python', 'SQL', 'Spark', 'Airflow', 'AWS/GCP'],
+    prerequisites: ['Python basics', 'SQL basics'],
+    learningOutcomes: ['Build resilient ETL pipelines', 'Design highly optimized data warehouses', 'Orchestrate workflows with Airflow'],
+    mentorTips: ['SQL is your most important tool. Master complex joins and window functions.'],
+    projects: [],
+    resources: [],
+    modules: [
+      {
+        id: 'de-m1',
+        title: 'Data Warehousing & ETL',
+        description: 'Introduction to data pipelines, extraction, transformation, and loading.',
+        progress: 10, estimatedTime: '4 Weeks', status: 'In Progress', completedLessons: 1, totalLessons: 5,
+        lessons: [
+          { id: 'de1', title: 'What is Data Engineering?', type: 'video', duration: '30m', isCompleted: true },
+          { id: 'de2', title: 'SQL Advanced Joins', type: 'practice', duration: '1h', isCompleted: false },
+          { id: 'de3', title: 'Introduction to Apache Spark', type: 'video', duration: '50m', isCompleted: false },
+          { id: 'de4', title: 'Building a simple ETL pipeline', type: 'practice', duration: '1.5h', isCompleted: false },
+          { id: 'de5', title: 'Data Warehousing Concepts', type: 'reading', duration: '40m', isCompleted: false }
+        ],
+        miniProjects: [], practiceLinks: []
+      }
+    ]
   }
 ];

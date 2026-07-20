@@ -4,6 +4,7 @@ import * as React from 'react';
 import { FileText, Upload, Loader2, Sparkles } from 'lucide-react';
 import { AIChatEngine } from '@/components/study-assistant/AIChatEngine';
 import { SmartToolPanel } from '@/components/study-assistant/SmartToolPanel';
+import { HoverCard } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
 
 export default function PremiumStudyAssistantPage() {
@@ -57,68 +58,72 @@ export default function PremiumStudyAssistantPage() {
       </div>
 
       {/* 1. TOP: FILE UPLOAD SECTION */}
-      <section className="bg-card border rounded-xl p-6 shadow-sm flex flex-col items-center justify-center border-dashed border-2 hover:border-primary/50 transition-colors">
-        <input 
-          type="file" 
-          accept="image/*,application/pdf" 
-          className="hidden" 
-          ref={fileInputRef} 
-          onChange={handleFileUpload} 
-        />
-        
-        {isScanning ? (
-          <div className="flex flex-col items-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
-            <p className="font-semibold">Analyzing document...</p>
-            <p className="text-sm text-muted-foreground">Extracting text context</p>
-          </div>
-        ) : extractedText ? (
-          <div className="flex flex-col items-center w-full">
-            <div className="flex items-center gap-2 mb-4">
-              <FileText className="w-5 h-5 text-primary" />
-              <span className="font-bold">{fileName}</span>
+      <HoverCard>
+        <section className="bg-card/50 border-0 rounded-xl p-6 flex flex-col items-center justify-center border-dashed border-2 hover:border-primary/50 transition-colors h-full">
+          <input 
+            type="file" 
+            accept="image/*,application/pdf" 
+            className="hidden" 
+            ref={fileInputRef} 
+            onChange={handleFileUpload} 
+          />
+          
+          {isScanning ? (
+            <div className="flex flex-col items-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+              <p className="font-semibold">Analyzing document...</p>
+              <p className="text-sm text-muted-foreground">Extracting text context</p>
             </div>
-            <div className="w-full max-h-32 overflow-y-auto bg-muted/30 rounded-md p-3 text-xs text-muted-foreground border mb-4">
-              {extractedText}
+          ) : extractedText ? (
+            <div className="flex flex-col items-center w-full">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="w-5 h-5 text-primary" />
+                <span className="font-bold">{fileName}</span>
+              </div>
+              <div className="w-full max-h-32 overflow-y-auto bg-muted/30 rounded-md p-3 text-xs text-muted-foreground border mb-4">
+                {extractedText}
+              </div>
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()} size="sm">
+                <Upload className="w-4 h-4 mr-2" /> Replace File
+              </Button>
             </div>
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()} size="sm">
-              <Upload className="w-4 h-4 mr-2" /> Replace File
-            </Button>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center py-8">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-              <Upload className="w-6 h-6 text-primary" />
+          ) : (
+            <div className="flex flex-col items-center py-8">
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <Upload className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="text-lg font-bold mb-2">Upload Document</h3>
+              <p className="text-sm text-muted-foreground mb-6 text-center max-w-md">
+                Upload a PDF or Image. The AI will extract the content and prepare it for analysis.
+              </p>
+              <Button onClick={() => fileInputRef.current?.click()} className="font-semibold shadow-sm px-8">
+                Browse Files
+              </Button>
             </div>
-            <h3 className="text-lg font-bold mb-2">Upload Document</h3>
-            <p className="text-sm text-muted-foreground mb-6 text-center max-w-md">
-              Upload a PDF or Image. The AI will extract the content and prepare it for analysis.
-            </p>
-            <Button onClick={() => fileInputRef.current?.click()} className="font-semibold shadow-sm px-8">
-              Browse Files
-            </Button>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
+      </HoverCard>
 
       {/* 2. MIDDLE: CHAT INTERFACE
           h-[500px] gives the card a fixed height.
           overflow-hidden clips the card border-radius properly.
           The inner AIChatEngine uses flex-1 min-h-0 to scroll independently. */}
-      <section className="flex flex-col h-[520px] border rounded-xl overflow-hidden shadow-sm">
-        <div className="bg-muted/20 px-4 py-2 border-b text-sm font-semibold flex items-center justify-between shrink-0">
-          <span>Chat with Document</span>
-          {extractedText && (
-            <span className="text-xs font-medium px-2 py-1 bg-green-500/10 text-green-700 rounded-full">
-              Context Loaded
-            </span>
-          )}
-        </div>
-        {/* flex-1 min-h-0 — lets AIChatEngine fill remaining height and manage its own scroll */}
-        <div className="flex-1 min-h-0">
-          <AIChatEngine documentContext={extractedText} />
-        </div>
-      </section>
+      <HoverCard className="h-[520px] flex flex-col p-0">
+        <section className="flex flex-col h-full overflow-hidden bg-transparent border-0 shadow-none">
+          <div className="bg-muted/20 px-4 py-2 border-b border-border/50 text-sm font-semibold flex items-center justify-between shrink-0">
+            <span>Chat with Document</span>
+            {extractedText && (
+              <span className="text-xs font-medium px-2 py-1 bg-green-500/10 text-green-700 rounded-full">
+                Context Loaded
+              </span>
+            )}
+          </div>
+          {/* flex-1 min-h-0 — lets AIChatEngine fill remaining height and manage its own scroll */}
+          <div className="flex-1 min-h-0">
+            <AIChatEngine documentContext={extractedText} />
+          </div>
+        </section>
+      </HoverCard>
 
       {/* 3. BOTTOM: SMART TOOL PANEL */}
       <section className="flex flex-col">

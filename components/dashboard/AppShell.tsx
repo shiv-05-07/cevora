@@ -10,7 +10,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { isExpanded } = useSidebar();
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-transparent text-foreground transition-colors duration-200">
       {/* Sidebar (desktop fixed) */}
       <Sidebar />
 

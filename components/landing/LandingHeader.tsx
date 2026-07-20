@@ -5,18 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LogOut, User } from 'lucide-react';
 import { CevoraLogo } from '@/components/shared/CevoraLogo';
+import { TopProfileSection } from '@/components/profile/TopProfileSection';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { OverlaySidebar } from '@/components/shared/OverlaySidebar';
 import { MAIN_NAVIGATION } from '@/constants/navigation';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { OnboardingModal } from '@/components/auth/OnboardingModal';
 import { useCevoraAuth } from '@/hooks/useCevoraAuth';
 import { cn } from '@/lib/utils';
@@ -72,43 +65,7 @@ export function LandingHeader({ className }: { className?: string }) {
                   >
                     Go to Dashboard
                   </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="focus-visible:outline-none">
-                      <Avatar className="w-8 h-8 cursor-pointer hover:opacity-90 transition-opacity">
-                        <AvatarFallback className="text-xs font-bold uppercase tracking-wider">
-                          {initials}
-                        </AvatarFallback>
-                      </Avatar>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-52">
-                      <div className="px-3 py-2 space-y-0.5">
-                        <p className="text-xs font-bold text-foreground truncate">
-                          {user?.profile?.name ?? 'User'}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground truncate">
-                          {user?.profile?.email ?? ''}
-                        </p>
-                      </div>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        render={<button className="w-full" />}
-                        onClick={() => router.push('/dashboard')}
-                        className="cursor-pointer text-xs"
-                      >
-                        <User className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
-                        Dashboard
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        render={<button className="w-full" />}
-                        onClick={handleLogout}
-                        className="cursor-pointer text-xs text-destructive focus:text-destructive"
-                      >
-                        <LogOut className="w-3.5 h-3.5 mr-2" />
-                        Sign Out
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <TopProfileSection />
                 </>
               ) : (
                 // ── Logged Out: Sign In + Get Started ──

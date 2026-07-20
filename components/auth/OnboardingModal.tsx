@@ -204,7 +204,7 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
   return (
     // Backdrop
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-label="Create your account"
@@ -220,7 +220,7 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
 
       {/* Modal panel */}
       <motion.div
-        className="relative z-10 w-full max-w-lg bg-card border border-border/60 rounded-2xl shadow-2xl overflow-hidden"
+        className="relative z-10 w-full max-w-lg bg-card border border-border/60 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90vh]"
         initial={{ opacity: 0, scale: 0.97, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 8 }}
@@ -270,8 +270,8 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
           ))}
         </div>
 
-        {/* Step content */}
-        <div className="relative overflow-hidden min-h-[360px] sm:min-h-[400px]">
+        {/* Step content — overflow-hidden clips the x-slide animation */}
+        <div className="overflow-y-auto flex-1 pb-safe overflow-hidden">
           <AnimatePresence mode="wait" custom={direction}>
             {/* ─── STEP 1: Signup ─── */}
             {step === 'signup' && (
@@ -283,10 +283,9 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="absolute inset-0 p-6 flex flex-col"
+                className="p-4 sm:p-6 flex flex-col gap-4"
               >
-                <form onSubmit={handleSignupSubmit} className="flex flex-col gap-4 flex-1">
-                  {/* Full Name */}
+                <form onSubmit={handleSignupSubmit} className="flex flex-col gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="ob-name" className="text-xs font-medium">Full Name</Label>
                     <Input
@@ -299,7 +298,6 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                     {errors.name && <p className="text-[11px] text-destructive">{errors.name}</p>}
                   </div>
 
-                  {/* Username */}
                   <div className="space-y-1.5">
                     <Label htmlFor="ob-username" className="text-xs font-medium">Username</Label>
                     <Input
@@ -312,7 +310,6 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                     {errors.username && <p className="text-[11px] text-destructive">{errors.username}</p>}
                   </div>
 
-                  {/* Email */}
                   <div className="space-y-1.5">
                     <Label htmlFor="ob-email" className="text-xs font-medium">Email Address</Label>
                     <Input
@@ -326,7 +323,6 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                     {errors.email && <p className="text-[11px] text-destructive">{errors.email}</p>}
                   </div>
 
-                  {/* Password */}
                   <div className="space-y-1.5">
                     <Label htmlFor="ob-password" className="text-xs font-medium">Password</Label>
                     <div className="relative">
@@ -350,18 +346,16 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                     {errors.password && <p className="text-[11px] text-destructive">{errors.password}</p>}
                   </div>
 
-                  <div className="mt-auto pt-2">
-                    <Button type="submit" className="w-full font-semibold hover:-translate-y-[1px] transition-all duration-200">
-                      Continue
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                    <p className="text-center text-xs text-muted-foreground mt-4">
-                      Already have an account?{' '}
-                      <a href="/login" className="text-primary hover:underline font-medium" onClick={onClose}>
-                        Sign in
-                      </a>
-                    </p>
-                  </div>
+                  <Button type="submit" className="w-full font-semibold mt-1">
+                    Continue
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                  <p className="text-center text-xs text-muted-foreground">
+                    Already have an account?{' '}
+                    <a href="/login" className="text-primary hover:underline font-medium" onClick={onClose}>
+                      Sign in
+                    </a>
+                  </p>
                 </form>
               </motion.div>
             )}
@@ -376,9 +370,9 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="absolute inset-0 p-6 flex flex-col gap-4"
+                className="p-4 sm:p-6 flex flex-col gap-4"
               >
-                <div className="flex flex-col gap-3 flex-1">
+                <div className="flex flex-col gap-3">
                   {ROLES.map(({ id, label, description, icon: Icon }) => {
                     const isSelected = selectedRole === id;
                     return (
@@ -411,22 +405,12 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                   })}
                 </div>
 
-                <div className="flex gap-3 mt-auto">
-                  <Button
-                    variant="outline"
-                    onClick={() => goBack('signup')}
-                    className="flex-1 hover:-translate-y-[1px] transition-all duration-200"
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => goBack('signup')} className="flex-1">
+                    <ArrowLeft className="w-4 h-4 mr-2" />Back
                   </Button>
-                  <Button
-                    onClick={handleRoleConfirm}
-                    disabled={!selectedRole}
-                    className="flex-1 font-semibold hover:-translate-y-[1px] transition-all duration-200"
-                  >
-                    Continue
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                  <Button onClick={handleRoleConfirm} disabled={!selectedRole} className="flex-1 font-semibold">
+                    Continue<ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
               </motion.div>
@@ -442,87 +426,73 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="absolute inset-0 p-6 flex flex-col gap-5"
+                className="p-4 sm:p-6 flex flex-col gap-4"
               >
                 {selectedRole === 'student' ? (
                   <>
-                    {/* Student — Join community */}
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/20">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                          <Users className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold">Join with Community Key</p>
-                          <p className="text-xs text-muted-foreground">Enter the key shared by your faculty mentor.</p>
-                        </div>
+                    <div className="flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/20">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                        <Users className="w-5 h-5" />
                       </div>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="community-key" className="text-xs font-medium">Community Key</Label>
-                        <Input
-                          id="community-key"
-                          placeholder="e.g. CSE-2026-BATCH"
-                          value={communityKey}
-                          onChange={e => { setCommunityKey(e.target.value); setCommunityError(''); }}
-                          className={cn(communityError && 'border-destructive focus-visible:ring-destructive')}
-                        />
-                        {communityError && <p className="text-[11px] text-destructive">{communityError}</p>}
+                      <div>
+                        <p className="text-sm font-semibold">Join with Community Key</p>
+                        <p className="text-xs text-muted-foreground">Enter the key shared by your faculty mentor.</p>
                       </div>
                     </div>
-                    <div className="flex gap-3 mt-auto">
-                      <Button variant="outline" onClick={() => goBack('role')} className="flex-1 hover:-translate-y-[1px] transition-all duration-200">
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Back
+                    <div className="space-y-1.5">
+                      <Label htmlFor="community-key" className="text-xs font-medium">Community Key</Label>
+                      <Input
+                        id="community-key"
+                        placeholder="e.g. CSE-2026-BATCH"
+                        value={communityKey}
+                        onChange={e => { setCommunityKey(e.target.value); setCommunityError(''); }}
+                        className={cn(communityError && 'border-destructive focus-visible:ring-destructive')}
+                      />
+                      {communityError && <p className="text-[11px] text-destructive">{communityError}</p>}
+                    </div>
+                    <div className="flex gap-3">
+                      <Button variant="outline" onClick={() => goBack('role')} className="flex-1">
+                        <ArrowLeft className="w-4 h-4 mr-2" />Back
                       </Button>
-                      <Button onClick={() => finishOnboarding(true)} className="flex-1 font-semibold hover:-translate-y-[1px] transition-all duration-200">
-                        Join & Continue
+                      <Button onClick={() => finishOnboarding(true)} className="flex-1 font-semibold">
+                        Join &amp; Continue
                       </Button>
                     </div>
-                    <button
-                      onClick={() => finishOnboarding(false)}
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors text-center underline-offset-4 hover:underline"
-                    >
+                    <button onClick={() => finishOnboarding(false)} className="text-xs text-muted-foreground hover:text-foreground transition-colors text-center underline-offset-4 hover:underline">
                       Continue without community
                     </button>
                   </>
                 ) : (
                   <>
-                    {/* Teacher / Professor — Create community */}
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/20">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                          <Plus className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold">Create a Community</p>
-                          <p className="text-xs text-muted-foreground">Set up a workspace and share the key with your students.</p>
-                        </div>
+                    <div className="flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/20">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                        <Plus className="w-5 h-5" />
                       </div>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="community-name" className="text-xs font-medium">Community Name</Label>
-                        <Input
-                          id="community-name"
-                          placeholder="e.g. CSE 2026 Batch"
-                          value={communityName}
-                          onChange={e => { setCommunityName(e.target.value); setCommunityError(''); }}
-                          className={cn(communityError && 'border-destructive focus-visible:ring-destructive')}
-                        />
-                        {communityError && <p className="text-[11px] text-destructive">{communityError}</p>}
+                      <div>
+                        <p className="text-sm font-semibold">Create a Community</p>
+                        <p className="text-xs text-muted-foreground">Set up a workspace and share the key with your students.</p>
                       </div>
                     </div>
-                    <div className="flex gap-3 mt-auto">
-                      <Button variant="outline" onClick={() => goBack('role')} className="flex-1 hover:-translate-y-[1px] transition-all duration-200">
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Back
+                    <div className="space-y-1.5">
+                      <Label htmlFor="community-name" className="text-xs font-medium">Community Name</Label>
+                      <Input
+                        id="community-name"
+                        placeholder="e.g. CSE 2026 Batch"
+                        value={communityName}
+                        onChange={e => { setCommunityName(e.target.value); setCommunityError(''); }}
+                        className={cn(communityError && 'border-destructive focus-visible:ring-destructive')}
+                      />
+                      {communityError && <p className="text-[11px] text-destructive">{communityError}</p>}
+                    </div>
+                    <div className="flex gap-3">
+                      <Button variant="outline" onClick={() => goBack('role')} className="flex-1">
+                        <ArrowLeft className="w-4 h-4 mr-2" />Back
                       </Button>
-                      <Button onClick={() => finishOnboarding(true)} className="flex-1 font-semibold hover:-translate-y-[1px] transition-all duration-200">
-                        Create & Continue
+                      <Button onClick={() => finishOnboarding(true)} className="flex-1 font-semibold">
+                        Create &amp; Continue
                       </Button>
                     </div>
-                    <button
-                      onClick={() => finishOnboarding(false)}
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors text-center underline-offset-4 hover:underline"
-                    >
+                    <button onClick={() => finishOnboarding(false)} className="text-xs text-muted-foreground hover:text-foreground transition-colors text-center underline-offset-4 hover:underline">
                       Continue without community
                     </button>
                   </>

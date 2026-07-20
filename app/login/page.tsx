@@ -83,8 +83,8 @@ export default function LoginPage() {
       </header>
 
       {/* Centered card */}
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-[420px] space-y-8">
+      <main className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
+        <div className="w-full max-w-[420px] space-y-6 sm:space-y-8">
 
           {/* Heading */}
           <div className="text-center space-y-1.5">
@@ -95,7 +95,7 @@ export default function LoginPage() {
           </div>
 
           {/* Card */}
-          <div className="bg-card border border-border/50 rounded-2xl shadow-sm p-6 sm:p-8 space-y-5">
+          <div className="bg-card border border-border/50 rounded-2xl shadow-sm p-5 sm:p-8 space-y-5">
 
             {/* General error */}
             {errors.general && (
