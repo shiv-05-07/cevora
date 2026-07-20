@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Logo } from './Logo';
+import { CevoraLogo } from './CevoraLogo';
 import { ThemeToggle } from './ThemeToggle';
 import { Menu, X } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -29,7 +29,11 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/70 backdrop-blur-md transition-all duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-        <Logo />
+        
+        {/* Left Side: Logo */}
+        <div className="flex items-center gap-3">
+          <CevoraLogo size="medium" />
+        </div>
 
         {/* Desktop Navigation Links */}
         <nav className="hidden md:flex items-center gap-8">

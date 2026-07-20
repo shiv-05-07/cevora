@@ -7,6 +7,7 @@ import { Menu, LogOut, LucideIcon } from 'lucide-react';
 import { Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { WorkspaceCard } from '@/components/dashboard/WorkspaceCard';
 import { APP_CONFIG } from '@/constants/app';
+import { CevoraLogo } from '@/components/shared/CevoraLogo';
 import { cn } from '@/lib/utils';
 
 export interface NavigationGroup {
@@ -54,12 +55,7 @@ export function OverlaySidebar({
         <div className="flex-1 overflow-hidden flex flex-col">
           <div className="h-14 shrink-0 border-b border-border/80 dark:border-border/40 flex items-center px-6">
             <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-primary text-primary-foreground font-extrabold text-sm flex items-center justify-center rounded-lg shadow-sm">
-                C
-              </div>
-              <span className="font-bold tracking-tight text-base text-foreground">
-                {APP_CONFIG.name}
-              </span>
+              <CevoraLogo size="medium" />
             </Link>
           </div>
 
@@ -72,9 +68,11 @@ export function OverlaySidebar({
           <nav className="p-3 space-y-4 overflow-y-auto flex-1">
             {navigationGroups.map((group) => (
               <div key={group.title} className="space-y-1">
-                <h4 className="px-3 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 select-none">
-                  {group.title}
-                </h4>
+                {group.title && (
+                  <h4 className="px-3 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 select-none">
+                    {group.title}
+                  </h4>
+                )}
                 {group.items.map((link) => {
                   const Icon = link.icon;
                   // For landing page anchors, we check if pathname is / and href starts with #

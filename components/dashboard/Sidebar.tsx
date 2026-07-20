@@ -13,12 +13,12 @@ import {
 import { APP_CONFIG } from '@/constants/app';
 import { useSidebar } from '@/providers/SidebarProvider';
 import { useWorkspace } from '@/providers/WorkspaceProvider';
-import { LANDING_NAVIGATION, WORKSPACE_NAVIGATION } from '@/constants/navigation';
+import { MAIN_NAVIGATION } from '@/constants/navigation';
 import { WorkspaceCard } from './WorkspaceCard';
 import { SidebarNavItem } from './SidebarNavItem';
-import { SidebarSection } from './SidebarSection';
 import { ThemeToggle } from './ThemeToggle';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { SidebarProfileSection } from '@/components/profile/SidebarProfileSection';
+import { CevoraLogo } from '@/components/shared/CevoraLogo';
 import { cn } from '@/lib/utils';
 
 export function Sidebar({ className }: { className?: string }) {
@@ -33,7 +33,7 @@ export function Sidebar({ className }: { className?: string }) {
   return (
     <aside
       className={cn(
-        'hidden md:flex flex-col h-screen fixed left-0 top-0 z-40 bg-card border-r border-border/80 dark:border-border/40 select-none transition-all duration-300 ease-in-out',
+        'hidden md:flex flex-col h-screen fixed left-0 top-0 z-40 bg-white/30 dark:bg-black/30 backdrop-blur-md border-r border-border/80 dark:border-border/40 select-none transition-all duration-300 ease-in-out',
         isExpanded ? 'w-64' : 'w-16',
         className
       )}
@@ -41,19 +41,7 @@ export function Sidebar({ className }: { className?: string }) {
       {/* Top Header Logo */}
       <div className="h-14 border-b border-border/80 dark:border-border/40 flex items-center px-4 justify-between overflow-hidden">
         <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0 focus-visible:outline-none">
-          <div className="w-8 h-8 bg-primary text-primary-foreground font-extrabold text-sm flex items-center justify-center rounded-lg shadow-sm">
-            C
-          </div>
-          {isExpanded && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.15 }}
-              className="font-bold tracking-tight text-base text-foreground"
-            >
-              {APP_CONFIG.name}
-            </motion.span>
-          )}
+          <CevoraLogo iconOnly={!isExpanded} size="medium" />
         </Link>
 
         {isExpanded && (
@@ -83,62 +71,29 @@ export function Sidebar({ className }: { className?: string }) {
       </div>
 
       {/* Navigation List */}
-      <nav className="flex-1 overflow-y-auto px-2.5 py-4 space-y-4 scrollbar-none">
-        <SidebarSection title="Platform" isExpanded={isExpanded}>
-          {LANDING_NAVIGATION.map((link) => {
-            const isLandingAnchor = link.href.startsWith('#');
-            const isActive = isLandingAnchor 
-              ? false
-              : (pathname === link.href || (pathname !== '/' && pathname?.startsWith(link.href + '/')));
-            return (
-              <SidebarNavItem
-                key={link.label}
-                label={link.label}
-                href={link.href}
-                icon={link.icon}
-                isExpanded={isExpanded}
-                isActive={isActive}
-              />
-            );
-          })}
-        </SidebarSection>
-
-        <SidebarSection title="Workspace" isExpanded={isExpanded}>
-          {WORKSPACE_NAVIGATION.map((link) => {
-            const isActive = pathname === link.href || pathname?.startsWith(link.href + '/');
-            return (
-              <SidebarNavItem
-                key={link.label}
-                label={link.label}
-                href={link.href}
-                icon={link.icon}
-                isExpanded={isExpanded}
-                isActive={isActive}
-              />
-            );
-          })}
-        </SidebarSection>
+      <nav className="flex-1 overflow-y-auto px-2.5 py-4 space-y-1 scrollbar-none">
+        {MAIN_NAVIGATION.map((link) => {
+          const isLandingAnchor = link.href.startsWith('#');
+          const isActive = isLandingAnchor 
+            ? false
+            : (pathname === link.href || (pathname !== '/' && pathname?.startsWith(link.href + '/')));
+          return (
+            <SidebarNavItem
+              key={link.label}
+              label={link.label}
+              href={link.href}
+              icon={link.icon}
+              isExpanded={isExpanded}
+              isActive={isActive}
+            />
+          );
+        })}
       </nav>
 
       {/* Bottom Footer Actions */}
-      <div className="p-3 border-t border-border/80 dark:border-border/40 space-y-2.5 bg-card/50">
+      <div className="p-3 border-t border-border/80 dark:border-border/40 space-y-2.5 bg-transparent">
         <div className={cn('flex items-center justify-between gap-2', !isExpanded && 'flex-col items-center')}>
-          <div className="flex items-center gap-2">
-            <Avatar className="w-8 h-8 shrink-0 select-none">
-              <AvatarFallback className="text-xs uppercase font-semibold">JD</AvatarFallback>
-            </Avatar>
-            {isExpanded && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.15 }}
-                className="leading-none text-left"
-              >
-                <p className="text-xs font-bold text-foreground">John Doe</p>
-                <p className="text-[9px] text-muted-foreground capitalize font-medium">{role}</p>
-              </motion.div>
-            )}
-          </div>
+          <SidebarProfileSection isExpanded={isExpanded} />
 
           <div className="flex items-center gap-1">
             <ThemeToggle />

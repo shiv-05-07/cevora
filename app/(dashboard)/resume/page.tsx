@@ -1,25 +1,19 @@
-'use client';
-
-import * as React from 'react';
-import { FileText } from 'lucide-react';
+import { ResumeAnalyzerClient } from '@/components/resume/ResumeAnalyzerClient';
 import { PageHeader } from '@/components/dashboard/PageHeader';
-import { EmptyState } from '@/components/ui/empty-state';
 
-export default function ResumePage() {
+export const metadata = {
+  title: 'Resume Analyzer | Cevora',
+  description: 'Upload your resume and receive a complete ATS-style analysis, personalized improvement suggestions, keyword optimization, and recruiter readiness insights.',
+};
+
+export default function ResumeAnalyzerPage() {
   return (
     <div className="space-y-6">
       <PageHeader
         title="Resume Analyzer"
-        description="Verify layout guidelines, audit key resume content sections, and test ATS screening index scores."
+        description="Upload your resume and receive a complete ATS-style analysis, personalized improvement suggestions, keyword optimization, and recruiter readiness insights."
       />
-
-      <EmptyState
-        icon={FileText}
-        title="Upload Your Resume"
-        description="Submit your PDF resume draft to scan formatting issues, flag section weaknesses, and calculate target role compatibility."
-        actionText="Upload PDF"
-        onActionClick={() => alert('Launching file selector...')}
-      />
+      <ResumeAnalyzerClient />
     </div>
   );
 }

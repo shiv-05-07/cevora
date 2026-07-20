@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/shared/ThemeProvider';
+import { GlobalBackground } from '@/components/shared/GlobalBackground';
 import { APP_CONFIG } from '@/constants/app';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 
 const geistSans = Geist({
@@ -42,7 +45,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <GlobalBackground />
+          <div className="relative z-0 flex flex-col min-h-full">
+            {children}
+            <Analytics />
+            <SpeedInsights />
+          </div>
         </ThemeProvider>
       </body>
     </html>

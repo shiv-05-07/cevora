@@ -2,18 +2,18 @@
 
 import * as React from 'react';
 import { OverlaySidebar } from '@/components/shared/OverlaySidebar';
+import { TopProfileSection } from '@/components/profile/TopProfileSection';
 import { Breadcrumbs } from './Breadcrumbs';
 import { GlobalSearch } from './GlobalSearch';
 import { NotificationDropdown } from './NotificationDropdown';
-import { UserMenu } from './UserMenu';
 import { cn } from '@/lib/utils';
-import { LANDING_NAVIGATION, WORKSPACE_NAVIGATION } from '@/constants/navigation';
+import { MAIN_NAVIGATION } from '@/constants/navigation';
 
 export function Header({ className }: { className?: string }) {
   return (
     <header
       className={cn(
-        'sticky top-0 z-30 h-14 w-full border-b border-border/80 bg-background/80 backdrop-blur-md dark:border-border/40 select-none flex items-center justify-between px-4 sm:px-6 transition-colors duration-200',
+        'sticky top-0 z-30 h-14 w-full border-b border-border/80 bg-white/30 dark:bg-black/30 backdrop-blur-md dark:border-border/40 select-none flex items-center justify-between px-4 sm:px-6 transition-colors duration-200',
         className
       )}
     >
@@ -23,8 +23,7 @@ export function Header({ className }: { className?: string }) {
         <OverlaySidebar
           triggerClassName="md:hidden"
           navigationGroups={[
-            { title: 'Platform', items: LANDING_NAVIGATION },
-            { title: 'Workspace', items: WORKSPACE_NAVIGATION }
+            { title: '', items: MAIN_NAVIGATION }
           ]}
           showWorkspaceCard={true}
           showUserFooter={true}
@@ -45,8 +44,8 @@ export function Header({ className }: { className?: string }) {
         {/* Notifications Dropdown */}
         <NotificationDropdown />
 
-        {/* User Menu Profile Dropdown */}
-        <UserMenu />
+        {/* Top Profile Hover Section */}
+        <TopProfileSection />
       </div>
     </header>
   );
