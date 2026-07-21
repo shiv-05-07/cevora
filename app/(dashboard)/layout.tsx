@@ -31,27 +31,38 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
 
     const checkProfile = async () => {
       try {
-        const res = await fetch('/api/learning-profile');
+        const res = await fetch('/api/user');
         if (res.ok) {
           const json = await res.json();
-          const profile = json.data;
+          const user = json.data;
           
-          if (!profile || !profile.onboardingCompleted) {
-            if (!pathname.startsWith('/onboarding')) {
-              router.replace('/onboarding/goal');
+          if (user?.role === 'TEACHER' || user?.role === 'ADMIN') {
+            // Teachers should bypass student onboarding
+            if (pathname.startsWith('/onboarding')) {
+              router.replace('/mentor'); // or the teacher dashboard
             } else {
               setIsAllowed(true);
             }
           } else {
-            // onboarding completed
-            if (pathname.startsWith('/onboarding')) {
-              router.replace('/dashboard');
+            // Student flow
+            const profile = user?.learningProfile;
+            if (!profile || !profile.onboardingCompleted) {
+              if (!pathname.startsWith('/onboarding')) {
+                router.replace('/onboarding/goal');
+              } else {
+                setIsAllowed(true);
+              }
             } else {
-              setIsAllowed(true);
+              // onboarding completed
+              if (pathname.startsWith('/onboarding')) {
+                router.replace('/dashboard');
+              } else {
+                setIsAllowed(true);
+              }
             }
           }
         } else if (res.status === 404) {
-          // No profile exists, redirect to onboarding
+          // No user exists (this shouldn't happen with requireAppUser, but fallback)
           if (!pathname.startsWith('/onboarding')) {
             router.replace('/onboarding/goal');
           } else {

@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { useCevoraAuth } from '@/hooks/useCevoraAuth';
 import { CevoraUser, UserRole } from '@/types/auth';
+import { createClient } from '@/services/supabase/client';
+import { MailCheck } from 'lucide-react';
 
 type Step = 'signup' | 'role' | 'community';
 
@@ -83,7 +84,7 @@ function validateSignup(form: SignupForm): FormErrors {
 
 export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
   const router = useRouter();
-  const { register } = useCevoraAuth();
+  const supabase = createClient();
 
   const [step, setStep] = React.useState<Step>('signup');
   const [direction, setDirection] = React.useState(1);
@@ -98,10 +99,12 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
   const [errors, setErrors] = React.useState<FormErrors>({});
   const [selectedRole, setSelectedRole] = React.useState<UserRole | null>(null);
 
-  // Community state
   const [communityKey, setCommunityKey] = React.useState('');
   const [communityName, setCommunityName] = React.useState('');
   const [communityError, setCommunityError] = React.useState('');
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [signupError, setSignupError] = React.useState<string | null>(null);
+  const [signupSuccess, setSignupSuccess] = React.useState(false);
 
   // Close on Escape
   React.useEffect(() => {
@@ -124,6 +127,9 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
         setCommunityKey('');
         setCommunityName('');
         setCommunityError('');
+        setSignupError(null);
+        setSignupSuccess(false);
+        setIsSubmitting(false);
       }, 300);
     }
   }, [isOpen]);
@@ -158,7 +164,7 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
     goNext('community');
   };
 
-  const finishOnboarding = (withCommunity: boolean) => {
+  const finishOnboarding = async (withCommunity: boolean) => {
     if (!selectedRole) return;
 
     // Validate community input if user chose to add one
@@ -173,30 +179,36 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
       }
     }
 
-    const user: CevoraUser = {
-      profile: {
-        name: form.name,
-        username: form.username,
-        email: form.email,
-        role: selectedRole,
-      },
-      community: {
-        joined: withCommunity,
-        key: selectedRole === 'student' && withCommunity ? communityKey.trim() : undefined,
-        name:
-          (selectedRole === 'teacher' || selectedRole === 'professor') && withCommunity
-            ? communityName.trim()
-            : undefined,
-      },
-      auth: {
-        loggedIn: false,
-        createdAt: new Date().toISOString(),
-      },
-    };
+    setIsSubmitting(true);
+    setSignupError(null);
 
-    register(user);
+    const { data, error } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: {
+        data: {
+          full_name: form.name,
+          user_name: form.username,
+          role: selectedRole.toUpperCase(), // Store role in metadata
+        },
+      },
+    });
+
+    setIsSubmitting(false);
+
+    if (error) {
+      setSignupError(error.message);
+      return;
+    }
+
+    if (!data.session) {
+      // Email confirmation is required by Supabase
+      setSignupSuccess(true);
+      return;
+    }
+
     onClose();
-    router.push('/login');
+    router.push('/dashboard');
   };
 
   if (!isOpen) return null;
@@ -230,14 +242,16 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border/40">
           <div>
             <h2 className="text-lg font-bold text-foreground">
-              {step === 'signup' && 'Create your account'}
-              {step === 'role' && 'Choose your role'}
-              {step === 'community' && 'Join a community'}
+              {signupSuccess && 'Check your email'}
+              {!signupSuccess && step === 'signup' && 'Create your account'}
+              {!signupSuccess && step === 'role' && 'Choose your role'}
+              {!signupSuccess && step === 'community' && 'Join a community'}
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {step === 'signup' && 'Start your placement journey with Cevora.'}
-              {step === 'role' && 'This helps us personalise your workspace.'}
-              {step === 'community' && (
+              {signupSuccess && 'We sent a verification link to your inbox.'}
+              {!signupSuccess && step === 'signup' && 'Start your placement journey with Cevora.'}
+              {!signupSuccess && step === 'role' && 'This helps us personalise your workspace.'}
+              {!signupSuccess && step === 'community' && (
                 selectedRole === 'student'
                   ? 'Enter your community key to join a faculty workspace.'
                   : 'Set up a workspace for your students.'
@@ -271,10 +285,34 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
         </div>
 
         {/* Step content — overflow-hidden clips the x-slide animation */}
-        <div className="overflow-y-auto flex-1 pb-safe overflow-hidden">
-          <AnimatePresence mode="wait" custom={direction}>
-            {/* ─── STEP 1: Signup ─── */}
-            {step === 'signup' && (
+        <div className="relative flex-1 overflow-hidden">
+          <AnimatePresence initial={false} custom={direction} mode="wait">
+            {signupSuccess ? (
+              <motion.div
+                key="success"
+                custom={direction}
+                variants={variants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="p-6 sm:p-8 flex flex-col items-center justify-center text-center gap-6 h-full min-h-[280px]"
+              >
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                  <MailCheck className="w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold mb-2">Verification Required</h3>
+                  <p className="text-sm text-muted-foreground max-w-[280px] mx-auto">
+                    We've sent a verification email to <span className="font-semibold text-foreground">{form.email}</span>. 
+                    Please click the link in the email to activate your account.
+                  </p>
+                </div>
+                <Button onClick={() => { onClose(); router.push('/login'); }} className="w-full sm:w-auto min-w-[200px] mt-4">
+                  Go to Login
+                </Button>
+              </motion.div>
+            ) : step === 'signup' && (
               <motion.div
                 key="signup"
                 custom={direction}
@@ -450,15 +488,18 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                       />
                       {communityError && <p className="text-[11px] text-destructive">{communityError}</p>}
                     </div>
+                    {signupError && (
+                      <p className="text-sm font-medium text-destructive mt-3 mb-1">{signupError}</p>
+                    )}
                     <div className="flex gap-3">
-                      <Button variant="outline" onClick={() => goBack('role')} className="flex-1">
+                      <Button variant="outline" onClick={() => goBack('role')} className="flex-1" disabled={isSubmitting}>
                         <ArrowLeft className="w-4 h-4 mr-2" />Back
                       </Button>
-                      <Button onClick={() => finishOnboarding(true)} className="flex-1 font-semibold">
-                        Join &amp; Continue
+                      <Button onClick={() => finishOnboarding(true)} className="flex-1 font-semibold" disabled={isSubmitting}>
+                        {isSubmitting ? 'Creating...' : 'Join & Continue'}
                       </Button>
                     </div>
-                    <button onClick={() => finishOnboarding(false)} className="text-xs text-muted-foreground hover:text-foreground transition-colors text-center underline-offset-4 hover:underline">
+                    <button onClick={() => finishOnboarding(false)} disabled={isSubmitting} className="text-xs text-muted-foreground hover:text-foreground transition-colors text-center underline-offset-4 hover:underline">
                       Continue without community
                     </button>
                   </>
@@ -484,16 +525,23 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                       />
                       {communityError && <p className="text-[11px] text-destructive">{communityError}</p>}
                     </div>
-                    <div className="flex gap-3">
-                      <Button variant="outline" onClick={() => goBack('role')} className="flex-1">
-                        <ArrowLeft className="w-4 h-4 mr-2" />Back
-                      </Button>
-                      <Button onClick={() => finishOnboarding(true)} className="flex-1 font-semibold">
-                        Create &amp; Continue
-                      </Button>
-                    </div>
-                    <button onClick={() => finishOnboarding(false)} className="text-xs text-muted-foreground hover:text-foreground transition-colors text-center underline-offset-4 hover:underline">
-                      Continue without community
+                    {signupError && (
+                      <p className="text-sm font-medium text-destructive mb-3">{signupError}</p>
+                    )}
+                    <Button
+                      className="w-full h-11 text-sm font-semibold shadow-sm"
+                      onClick={() => finishOnboarding(true)}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? 'Creating account...' : 'Create Workspace'}
+                      {!isSubmitting && <ArrowRight className="w-4 h-4 ml-2" />}
+                    </Button>
+                    <button
+                      className="w-full py-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => finishOnboarding(false)}
+                      disabled={isSubmitting}
+                    >
+                      Skip for now, I'll join later
                     </button>
                   </>
                 )}

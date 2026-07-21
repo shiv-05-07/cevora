@@ -29,6 +29,7 @@ export const userService = {
         fullName: payload.fullName,
         username: payload.username,
         avatarUrl: payload.avatarUrl,
+        role: payload.role,
       });
     }
     

@@ -1,34 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/services/supabase/server";
+import { requireAppUser } from "@/lib/auth/requireUser";
 import { userService, updateProfileSchema } from "@/services/user";
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user: authUser },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { appUser } = await requireAppUser();
 
-    if (authError || !authUser) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized", error: authError?.message },
-        { status: 401 }
-      );
-    }
+    // Since requireAppUser always syncs and returns the full Prisma user
+    // including studentProfile and learningProfile (via queries), we can just return it.
 
-    const user = await userService.getCurrentUser(authUser.id);
-
-    if (!user) {
-      return NextResponse.json(
-        { success: false, message: "User not found" },
-        { status: 404 }
-      );
-    }
 
     return NextResponse.json({
       success: true,
-      data: user,
+      data: appUser,
     });
   } catch (error: any) {
     console.error("GET /api/user error:", error);
@@ -41,18 +25,7 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user: authUser },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !authUser) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized", error: authError?.message },
-        { status: 401 }
-      );
-    }
+    const { appUser } = await requireAppUser();
 
     const body = await request.json();
     const parsedData = updateProfileSchema.safeParse(body);
@@ -68,7 +41,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const updatedUser = await userService.updateProfile(authUser.id, parsedData.data);
+    const updatedUser = await userService.updateProfile(appUser.id, parsedData.data);
 
     return NextResponse.json({
       success: true,

@@ -2,15 +2,15 @@ import { useRouter } from 'next/navigation';
 import { Settings } from 'lucide-react';
 import { ProfileAvatar } from './ProfileAvatar';
 import { useProfileStore } from '@/store/useProfileStore';
-import { useCevoraAuth } from '@/hooks/useCevoraAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 export function ProfilePreviewCard() {
   const router = useRouter();
   const { profile } = useProfileStore();
-  const { logout } = useCevoraAuth();
+  const { signOut } = useAuth();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     router.refresh();
   };
 

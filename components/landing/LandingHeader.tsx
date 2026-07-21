@@ -11,22 +11,13 @@ import { OverlaySidebar } from '@/components/shared/OverlaySidebar';
 import { MAIN_NAVIGATION } from '@/constants/navigation';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { OnboardingModal } from '@/components/auth/OnboardingModal';
-import { useCevoraAuth } from '@/hooks/useCevoraAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 export function LandingHeader({ className }: { className?: string }) {
   const router = useRouter();
-  const { user, isLoaded, isLoggedIn, logout } = useCevoraAuth();
+  const { isAuthenticated, loading } = useAuth();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-
-  const handleLogout = () => {
-    logout();
-    router.refresh();
-  };
-
-  const initials = user?.profile?.name
-    ? user.profile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-    : 'JD';
 
   return (
     <>
@@ -52,9 +43,9 @@ export function LandingHeader({ className }: { className?: string }) {
           <div className="flex items-center gap-3">
             <ThemeToggle />
 
-            {/* Only render auth buttons once localStorage is loaded — avoids hydration flicker */}
-            {isLoaded && (
-              isLoggedIn ? (
+            {/* Only render auth buttons once loaded — avoids hydration flicker */}
+            {!loading && (
+              isAuthenticated ? (
                 // ── Logged In: Avatar + Dropdown ──
                 <>
                   <Button

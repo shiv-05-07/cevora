@@ -1,10 +1,12 @@
 import { z } from "zod";
+import { UserRole } from "@prisma/client";
 
 export const syncUserSchema = z.object({
   id: z.string().uuid(),
   fullName: z.string(),
   username: z.string(),
   avatarUrl: z.string().url().optional().or(z.literal("")).nullable(),
+  role: z.nativeEnum(UserRole).optional(),
 });
 
 export const updateProfileSchema = z.object({

@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { UserRole } from "@prisma/client";
 
 export const userQueries = {
   /**
@@ -9,18 +10,20 @@ export const userQueries = {
       where: { id },
       include: {
         studentProfile: true,
+        learningProfile: true,
       },
     });
   },
 
   /**
-   * Creates a new user along with an empty student profile.
+   * Creates a new user. If the user is a STUDENT, creates an empty student profile.
    */
   async createUser(data: {
     id: string;
     fullName: string;
     username: string;
     avatarUrl?: string | null;
+    role?: UserRole;
   }) {
     return prisma.user.create({
       data: {
@@ -28,12 +31,18 @@ export const userQueries = {
         fullName: data.fullName,
         username: data.username,
         avatarUrl: data.avatarUrl,
-        studentProfile: {
-          create: {}, // Create an empty student profile by default
-        },
+        ...(data.role ? { role: data.role } : {}),
+        ...(data.role === UserRole.STUDENT || !data.role
+          ? {
+              studentProfile: {
+                create: {},
+              },
+            }
+          : {}),
       },
       include: {
         studentProfile: true,
+        learningProfile: true,
       },
     });
   },
@@ -47,6 +56,7 @@ export const userQueries = {
       data,
       include: {
         studentProfile: true,
+        learningProfile: true,
       },
     });
   },

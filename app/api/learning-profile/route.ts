@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/services/supabase/server";
+import { requireAppUser } from '@/lib/auth/requireUser';
 import { learningProfileService } from "@/features/learning-profile/services/LearningProfileService";
 import { updateProfileSchema } from "@/features/learning-profile/validators/profileValidators";
 import { validateSchema } from "@/utils/validation";
@@ -9,17 +9,9 @@ import { isAppError, ValidationError } from "@/lib/errors";
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user: authUser },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { appUser } = await requireAppUser();
 
-    if (authError || !authUser) {
-      return apiResponse.error("Unauthorized", authError?.message, 401);
-    }
-
-    const profile = await learningProfileService.getProfile(authUser.id);
+    const profile = await learningProfileService.getProfile(appUser.id);
 
     if (!profile) {
       return apiResponse.error("Learning profile not found", "NOT_FOUND", 404);
@@ -34,20 +26,12 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user: authUser },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !authUser) {
-      return apiResponse.error("Unauthorized", authError?.message, 401);
-    }
+    const { appUser } = await requireAppUser();
 
     const body = await request.json();
     const parsedData = validateSchema(updateProfileSchema, body);
 
-    const updatedProfile = await learningProfileService.updateProfile(authUser.id, parsedData);
+    const updatedProfile = await learningProfileService.updateProfile(appUser.id, parsedData);
 
     return apiResponse.success(updatedProfile, "Profile updated successfully", 200);
   } catch (error: any) {
