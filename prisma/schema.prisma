@@ -750,10 +750,74 @@ model Mission {
   dueDate     DateTime?
   completedAt DateTime?
 
+  // [NEW] Added for CEV-006 Adaptive Mission Engine
+  difficulty RoadmapDifficulty @default(BEGINNER)
+  progress   Float             @default(0)
+  xpAwarded  Int?              @default(0)
+
+  lessons         MissionLesson[]
+  practices       MissionPractice[]
+  completion      MissionCompletion?
+  missionProgress MissionProgress?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+model MissionLesson {
+  id String @id @default(uuid()) @db.Uuid
+
+  missionId String  @db.Uuid
+  mission   Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  order              Int    @default(0)
+  title              String
+  content            String @db.Text
+  interactiveExample Json?
+  estimatedMinutes   Int
+
+  @@index([missionId])
+}
+
+model MissionPractice {
+  id String @id @default(uuid()) @db.Uuid
+
+  missionId String  @db.Uuid
+  mission   Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  order         Int     @default(0)
+  question      String
+  options       Json
+  correctAnswer Json
+  explanation   String?
+
+  @@index([missionId])
+}
+
+model MissionCompletion {
+  id String @id @default(uuid()) @db.Uuid
+
+  missionId String  @unique @db.Uuid
+  mission   Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  reflectionNotes  String?
+  confidenceRating Int
+  timeSpentSeconds Int
+  completedAt      DateTime @default(now())
+}
+
+model MissionProgress {
+  id String @id @default(uuid()) @db.Uuid
+
+  missionId String  @unique @db.Uuid
+  mission   Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  currentStage         String
+  completedLessonIds   String[] @default([])
+  completedPracticeIds String[] @default([])
+  lastInteractedAt     DateTime @default(now())
 }
 
 model LearningEvent {
