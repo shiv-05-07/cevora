@@ -21,6 +21,12 @@ enum UserRole {
   ADMIN
 }
 
+enum LearningPace {
+  SLOW
+  NORMAL
+  FAST
+}
+
 enum AccountStatus {
   ACTIVE
   PENDING
@@ -49,9 +55,9 @@ model User {
   // Relations
   studentProfile StudentProfile?
 
-  resumes        Resume[]
-  aiChats        AIChat[]
-  roadmaps       Roadmap[]
+  resumes  Resume[]
+  aiChats  AIChat[]
+  roadmaps Roadmap[]
 
   //notes          Note[]
   //bookmarks      Bookmark[]
@@ -60,10 +66,17 @@ model User {
 
   //achievements   Achievement[]
 
-  activities     UserActivity[]
+  activities UserActivity[]
 
   mockInterviews MockInterview[]
-  progresses UserProgress[]
+  progresses     UserProgress[]
+
+  // [NEW] Added for CEV-002 Adaptive Learning
+  learningProfile    LearningProfile?
+  diagnosticAttempts DiagnosticAttempt[]
+  conceptMasteries   ConceptMastery[]
+  missions           Mission[]
+  learningEvents     LearningEvent[]
 
   @@index([role])
   @@index([status])
@@ -79,25 +92,24 @@ model StudentProfile {
   userId String @unique @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  college String?
-  degree String?
+  college        String?
+  degree         String?
   specialization String?
 
-  semester Int?
+  semester       Int?
   graduationYear Int?
 
   cgpa Float?
 
-  targetRole String?
+  targetRole    String?
   targetCompany String?
 
-  github String?
-  linkedin String?
+  github    String?
+  linkedin  String?
   portfolio String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
 
   @@index([college])
 }
@@ -115,13 +127,13 @@ model Resume {
   id String @id @default(uuid()) @db.Uuid
 
   userId String @db.Uuid
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  title String
+  title   String
   summary String?
 
   workExperience String?
-  education String?
+  education      String?
 
   skills String[]
 
@@ -143,7 +155,7 @@ model ResumeProject {
   id String @id @default(uuid()) @db.Uuid
 
   resumeId String @db.Uuid
-  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
   title String
 
@@ -201,12 +213,12 @@ model Roadmap {
   id String @id @default(uuid()) @db.Uuid
 
   userId String? @db.Uuid
-  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  title String
+  title       String
   description String
 
-  category RoadmapCategory
+  category   RoadmapCategory
   difficulty RoadmapDifficulty
 
   estimatedHours Int?
@@ -227,10 +239,10 @@ model Roadmap {
 }
 
 model RoadmapStep {
-  id String @id @default(uuid()) @db.Uuid
+  id         String  @id @default(uuid()) @db.Uuid
   isOptional Boolean @default(false)
-  roadmapId String @db.Uuid
-  roadmap Roadmap @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  roadmapId  String  @db.Uuid
+  roadmap    Roadmap @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
 
   title String
 
@@ -246,19 +258,18 @@ model RoadmapStep {
 
   createdAt DateTime @default(now())
 
-  @@index([roadmapId])
-
   @@unique([roadmapId, order])
+  @@index([roadmapId])
 }
 
 model UserProgress {
   id String @id @default(uuid()) @db.Uuid
 
   userId String @db.Uuid
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  roadmapId String @db.Uuid
-  roadmap Roadmap @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  roadmapId String  @db.Uuid
+  roadmap   Roadmap @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
 
   completedSteps Int @default(0)
 
@@ -277,7 +288,6 @@ model UserProgress {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, roadmapId])
-
   @@index([roadmapId])
 }
 
@@ -299,8 +309,8 @@ enum OpportunityStatus {
 model Company {
   id String @id @default(uuid()) @db.Uuid
 
-  name String @unique
-  tags String[] 
+  name    String   @unique
+  tags    String[]
   logoUrl String?
 
   website String?
@@ -330,10 +340,10 @@ model Company {
 }
 
 model Opportunity {
-  id String @id @default(uuid()) @db.Uuid
-  skills String[] 
-  companyId String @db.Uuid
-  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id        String   @id @default(uuid()) @db.Uuid
+  skills    String[]
+  companyId String   @db.Uuid
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   title String
 
@@ -356,9 +366,7 @@ model Opportunity {
   updatedAt DateTime @updatedAt
 
   @@index([companyId])
-
   @@index([type])
-
   @@index([status])
 }
 
@@ -371,8 +379,8 @@ enum Difficulty {
 model OAQuestion {
   id String @id @default(uuid()) @db.Uuid
 
-  companyId String @db.Uuid
-  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String  @db.Uuid
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   title String
 
@@ -387,15 +395,14 @@ model OAQuestion {
   createdAt DateTime @default(now())
 
   @@index([companyId])
-
   @@index([difficulty])
 }
 
 model InterviewExperience {
   id String @id @default(uuid()) @db.Uuid
 
-  companyId String @db.Uuid
-  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String  @db.Uuid
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   role String
 
@@ -433,7 +440,7 @@ model AIChat {
   id String @id @default(uuid()) @db.Uuid
 
   userId String @db.Uuid
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   title String?
 
@@ -445,7 +452,6 @@ model AIChat {
   messages AIChatMessage[]
 
   @@index([userId])
-
   @@index([type])
 }
 
@@ -453,7 +459,7 @@ model AIChatMessage {
   id String @id @default(uuid()) @db.Uuid
 
   chatId String @db.Uuid
-  chat AIChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  chat   AIChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   role MessageRole
 
@@ -481,7 +487,7 @@ model MockInterview {
   id String @id @default(uuid()) @db.Uuid
 
   userId String @db.Uuid
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   title String
 
@@ -508,7 +514,6 @@ model MockInterview {
   feedback InterviewFeedback?
 
   @@index([userId])
-
   @@index([status])
 }
 
@@ -547,7 +552,7 @@ model UserActivity {
   id String @id @default(uuid()) @db.Uuid
 
   userId String @db.Uuid
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   type ActivityType
 
@@ -560,8 +565,212 @@ model UserActivity {
   createdAt DateTime @default(now())
 
   @@index([userId])
-
   @@index([type])
-
   @@index([createdAt])
+}
+
+// ================================
+// ADAPTIVE LEARNING ENUMS
+// ================================
+
+enum LearningLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum LearningStyle {
+  VISUAL
+  AUDITORY
+  READING_WRITING
+  KINESTHETIC
+}
+
+enum MissionType {
+  LESSON
+  QUIZ
+  PROJECT
+  REVIEW
+}
+
+enum MissionStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+enum MasteryLevel {
+  NOVICE
+  FAMILIAR
+  PROFICIENT
+  MASTERED
+}
+
+enum LearningEventType {
+  LESSON_STARTED
+  LESSON_COMPLETED
+  QUIZ_TAKEN
+  MISSION_COMPLETED
+  DIAGNOSTIC_COMPLETED
+}
+
+// ================================
+// ADAPTIVE LEARNING MODELS
+// ================================
+
+model LearningProfile {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @unique @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Configuration
+  learningLevel       LearningLevel?
+  learningStyle       LearningStyle?
+  preferredDifficulty RoadmapDifficulty @default(BEGINNER)
+  learningPace        LearningPace?
+
+  // [NEW] Added for CEV-003 Onboarding
+  learningGoals     String[] @default([])
+  preferredSubjects String[] @default([])
+
+  adaptiveEnabled     Boolean @default(true)
+  diagnosticCompleted Boolean @default(false)
+  onboardingCompleted Boolean @default(false)
+
+  // Goals & Streaks
+  dailyGoalMinutes  Int?
+  weeklyGoalMinutes Int?
+
+  currentStreak Int @default(0)
+  longestStreak Int @default(0)
+
+  lastLearningDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DiagnosticAttempt {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  score Float?
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  responses DiagnosticResponse[]
+
+  @@index([userId])
+}
+
+model DiagnosticResponse {
+  id String @id @default(uuid()) @db.Uuid
+
+  attemptId String            @db.Uuid
+  attempt   DiagnosticAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  questionId     String
+  selectedAnswer String?
+  correctAnswer  String?
+  isCorrect      Boolean
+  timeTaken      Int? // seconds
+
+  createdAt DateTime @default(now())
+
+  @@index([attemptId])
+}
+
+model Concept {
+  id String @id @default(uuid()) @db.Uuid
+
+  name String @unique
+  slug String @unique
+
+  description String?
+  category    String?
+
+  difficulty RoadmapDifficulty
+
+  estimatedMinutes Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  masteries ConceptMastery[]
+}
+
+model ConceptMastery {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  conceptId String  @db.Uuid
+  concept   Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+
+  masteryScore    Float        @default(0.0) // 0.0 to 1.0 or similar
+  masteryLevel    MasteryLevel @default(NOVICE)
+  confidenceScore Float        @default(0.0)
+
+  attempts       Int       @default(0)
+  lastPracticed  DateTime?
+  lastReviewedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, conceptId])
+  @@index([userId])
+  @@index([conceptId])
+}
+
+model Mission {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+
+  type   MissionType
+  status MissionStatus @default(PENDING)
+
+  priority         Int  @default(0)
+  estimatedMinutes Int?
+
+  content Json?
+
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model LearningEvent {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title  String?
+  source String?
+
+  eventType LearningEventType
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([eventType])
 }

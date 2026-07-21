@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CevoraLogo } from '@/components/shared/CevoraLogo';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
-import { useCevoraAuth } from '@/hooks/useCevoraAuth';
+import { useAuth } from '@/hooks/useAuth';
+import { createClient } from '@/services/supabase/client';
 import { cn } from '@/lib/utils';
 
 interface LoginForm {
@@ -36,7 +37,8 @@ function validate(form: LoginForm): FormErrors {
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isLoggedIn, isLoaded } = useCevoraAuth();
+  const { isAuthenticated, loading } = useAuth();
+  const supabase = createClient();
 
   const [form, setForm] = React.useState<LoginForm>({ identifier: '', password: '' });
   const [errors, setErrors] = React.useState<FormErrors>({});
@@ -45,10 +47,10 @@ export default function LoginPage() {
 
   // Redirect if already logged in
   React.useEffect(() => {
-    if (isLoaded && isLoggedIn) {
+    if (!loading && isAuthenticated) {
       router.replace('/dashboard');
     }
-  }, [isLoaded, isLoggedIn, router]);
+  }, [loading, isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,14 +62,15 @@ export default function LoginPage() {
     setErrors({});
     setIsSubmitting(true);
 
-    // Small artificial delay for UX feel
-    await new Promise(r => setTimeout(r, 600));
-
-    const success = login(form.identifier.trim(), form.password);
-    if (success) {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: form.identifier.trim(),
+      password: form.password,
+    });
+    
+    if (!error) {
       router.push('/dashboard');
     } else {
-      setErrors({ general: 'Invalid credentials. Please check your email / username and password.' });
+      setErrors({ general: error.message || 'Invalid credentials. Please check your email and password.' });
     }
     setIsSubmitting(false);
   };
