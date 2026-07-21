@@ -26,7 +26,7 @@
     "jspdf": "^4.2.1",
     "lucide-react": "^1.24.0",
     "mathjs": "^15.2.0",
-    "next": "16.2.10",
+    "next": "^9.3.3",
     "next-themes": "^0.4.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -51,5 +51,17 @@
     "prisma": "^6.16.2",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "allowScripts": {
+    "@google/genai@2.11.0": true,
+    "@prisma/client@6.16.2": true,
+    "core-js@3.49.0": true,
+    "protobufjs@7.6.5": true,
+    "sharp@0.34.5": true,
+    "tesseract.js@7.0.0": true,
+    "unrs-resolver@1.12.2": true,
+    "@prisma/engines@6.19.3": true,
+    "es5-ext@0.10.64": true,
+    "prisma@6.19.3": true
   }
 }
