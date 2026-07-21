@@ -14,15 +14,18 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useProfileStore } from '@/store/useProfileStore';
+import { useAuth } from '@/hooks/useAuth';
 
 export function UserMenu() {
   const router = useRouter();
   const { profile } = useProfileStore();
+  const { signOut } = useAuth();
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
   const avatarSrc = mounted ? profile.avatar : undefined;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
     window.location.href = '/';
   };
 

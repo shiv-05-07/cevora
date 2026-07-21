@@ -1,25 +1,12 @@
 import { NextResponse } from 'next/server';
 import { MissionService } from '@/features/mission/services/MissionService';
-import { createClient } from '@/services/supabase/server';
-import prisma from '@/lib/prisma';
+import { requireAppUser } from '@/lib/auth/requireUser';
+import { apiResponse } from '@/utils/apiResponse';
 import { missionCompletionSchema } from '@/features/mission/validators/missionValidators';
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const appUser = await prisma.user.findUnique({
-      where: { id: user.id }
-    });
-
-    if (!appUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
+    const { appUser } = await requireAppUser();
 
     const body = await request.json();
     const { missionId, ...payload } = body;
@@ -28,9 +15,9 @@ export async function POST(request: Request) {
 
     const result = await MissionService.completeMission(appUser.id, missionId, validatedPayload);
 
-    return NextResponse.json(result);
+    return apiResponse.success(result, 'Mission completed successfully', 200);
   } catch (error: any) {
     console.error('Error completing mission:', error);
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return apiResponse.error('Internal Server Error', error.message, 500);
   }
 }

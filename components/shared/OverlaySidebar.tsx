@@ -9,6 +9,7 @@ import { WorkspaceCard } from '@/components/dashboard/WorkspaceCard';
 import { APP_CONFIG } from '@/constants/app';
 import { CevoraLogo } from '@/components/shared/CevoraLogo';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface NavigationGroup {
   title: string;
@@ -35,7 +36,10 @@ export function OverlaySidebar({
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
 
-  const handleLogout = () => {
+  const { signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
     window.location.href = '/';
   };
 

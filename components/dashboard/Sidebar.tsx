@@ -20,13 +20,16 @@ import { ThemeToggle } from './ThemeToggle';
 import { SidebarProfileSection } from '@/components/profile/SidebarProfileSection';
 import { CevoraLogo } from '@/components/shared/CevoraLogo';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
   const { isExpanded, toggle } = useSidebar();
   const { role } = useWorkspace();
+  const { signOut } = useAuth();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
     window.location.href = '/';
   };
 
