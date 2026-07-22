@@ -8,6 +8,8 @@ import type { User } from '@supabase/supabase-js';
  * Custom hook to manage Supabase Auth state in Client Components.
  * Listens for auth state changes and exposes the user profile, loading state, and helper actions.
  */
+import { useProfileStore } from '@/store/useProfileStore';
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,6 +44,7 @@ export function useAuth() {
   const signOut = async () => {
     setLoading(true);
     try {
+      useProfileStore.getState().resetProfile();
       await supabase.auth.signOut();
       setUser(null);
     } catch (error) {

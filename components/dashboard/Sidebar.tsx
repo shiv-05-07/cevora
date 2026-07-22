@@ -13,7 +13,7 @@ import {
 import { APP_CONFIG } from '@/constants/app';
 import { useSidebar } from '@/providers/SidebarProvider';
 import { useWorkspace } from '@/providers/WorkspaceProvider';
-import { MAIN_NAVIGATION } from '@/constants/navigation';
+import { MAIN_NAVIGATION, TEACHER_NAVIGATION } from '@/constants/navigation';
 import { WorkspaceCard } from './WorkspaceCard';
 import { SidebarNavItem } from './SidebarNavItem';
 import { ThemeToggle } from './ThemeToggle';
@@ -21,12 +21,18 @@ import { SidebarProfileSection } from '@/components/profile/SidebarProfileSectio
 import { CevoraLogo } from '@/components/shared/CevoraLogo';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfileStore } from '@/store/useProfileStore';
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
   const { isExpanded, toggle } = useSidebar();
   const { role } = useWorkspace();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
+  const { profile } = useProfileStore();
+
+  const userRole = user?.user_metadata?.role?.toUpperCase() || profile?.role?.toUpperCase();
+  const isTeacher = userRole === 'TEACHER' || userRole === 'PROFESSOR' || pathname.startsWith('/teacher');
+  const navItems = isTeacher ? TEACHER_NAVIGATION : MAIN_NAVIGATION;
 
   const handleLogout = async () => {
     await signOut();
@@ -43,7 +49,7 @@ export function Sidebar({ className }: { className?: string }) {
     >
       {/* Top Header Logo */}
       <div className="h-14 border-b border-border/80 dark:border-border/40 flex items-center px-4 justify-between overflow-hidden">
-        <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0 focus-visible:outline-none">
+        <Link href={isTeacher ? '/teacher/dashboard' : '/dashboard'} className="flex items-center gap-2.5 shrink-0 focus-visible:outline-none">
           <CevoraLogo iconOnly={!isExpanded} size="medium" />
         </Link>
 
@@ -75,7 +81,7 @@ export function Sidebar({ className }: { className?: string }) {
 
       {/* Navigation List */}
       <nav className="flex-1 overflow-y-auto px-2.5 py-4 space-y-1 scrollbar-none">
-        {MAIN_NAVIGATION.map((link) => {
+        {navItems.map((link) => {
           const isLandingAnchor = link.href.startsWith('#');
           const isActive = isLandingAnchor 
             ? false

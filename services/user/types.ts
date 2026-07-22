@@ -5,13 +5,14 @@ export const syncUserSchema = z.object({
   id: z.string().uuid(),
   fullName: z.string(),
   username: z.string(),
-  avatarUrl: z.string().url().optional().or(z.literal("")).nullable(),
+  avatarUrl: z.string().optional().nullable(),
   role: z.nativeEnum(UserRole).optional(),
 });
 
 export const updateProfileSchema = z.object({
-  bio: z.string().optional(),
-  avatarUrl: z.string().url().optional().or(z.literal("")).nullable(),
+  fullName: z.string().optional(),
+  bio: z.string().optional().nullable(),
+  avatarUrl: z.string().optional().nullable(),
   username: z.string().optional(),
   
   // StudentProfile fields
@@ -23,9 +24,16 @@ export const updateProfileSchema = z.object({
   cgpa: z.number().optional().nullable(),
   targetRole: z.string().optional().nullable(),
   targetCompany: z.string().optional().nullable(),
-  github: z.string().url().optional().or(z.literal("")).nullable(),
-  linkedin: z.string().url().optional().or(z.literal("")).nullable(),
-  portfolio: z.string().url().optional().or(z.literal("")).nullable(),
+  github: z.string().optional().nullable(),
+  linkedin: z.string().optional().nullable(),
+  portfolio: z.string().optional().nullable(),
+
+  // TeacherProfile fields
+  institution: z.string().optional().nullable(),
+  department: z.string().optional().nullable(),
+  designation: z.string().optional().nullable(),
+  facultyId: z.string().optional().nullable(),
+  office: z.string().optional().nullable(),
 });
 
 export type SyncUserPayload = z.infer<typeof syncUserSchema>;

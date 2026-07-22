@@ -126,8 +126,8 @@ export function HeroIdentityCard({ profile, recruiterMode, setRecruiterMode }: H
 
             <div className="space-y-2">
               <div>
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">{settings.profile.name}</h1>
-                <p className="text-sm text-muted-foreground font-mono">@john_doe_dev</p>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">{storedProfile.name || settings.profile.name}</h1>
+                <p className="text-sm text-muted-foreground font-mono">@{storedProfile.username || storedProfile.email?.split('@')[0] || 'user'}</p>
               </div>
               <p className="text-sm font-medium text-primary flex items-center gap-1.5 justify-center sm:justify-start">
                 <Building2 className="w-4 h-4" />

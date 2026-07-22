@@ -54,6 +54,7 @@ model User {
 
   // Relations
   studentProfile StudentProfile?
+  teacherProfile TeacherProfile?
 
   resumes  Resume[]
   aiChats  AIChat[]
@@ -112,6 +113,29 @@ model StudentProfile {
   updatedAt DateTime @updatedAt
 
   @@index([college])
+}
+
+// ================================
+// TEACHER PROFILE
+// ================================
+
+model TeacherProfile {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @unique @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  institution String?
+  department  String?
+  designation String?
+  facultyId   String?
+  office      String?
+  bio         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([institution])
 }
 
 // ================================

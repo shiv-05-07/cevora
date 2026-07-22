@@ -28,8 +28,14 @@ export async function requireAppUser() {
       role,
     });
 
+    if (!appUser) {
+      throw new AppError("User sync returned null", "SYNC_ERROR", 500);
+    }
+
     return { authUser, appUser };
   } catch (error: any) {
+    if (error instanceof AppError) throw error;
     throw new AppError("Failed to synchronize user", "SYNC_ERROR", 500);
   }
 }
+

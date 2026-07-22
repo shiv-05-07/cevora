@@ -16,9 +16,12 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: any) {
     console.error("GET /api/user error:", error);
+    // Propagate the actual HTTP status from AppError (e.g. 401 Unauthorized)
+    // so RouteGuard can distinguish auth failures from server errors.
+    const status: number = typeof error.status === 'number' ? error.status : 500;
     return NextResponse.json(
-      { success: false, message: "Internal Server Error", error: error.message },
-      { status: 500 }
+      { success: false, message: error.message || "Internal Server Error", error: error.code || error.message },
+      { status }
     );
   }
 }

@@ -34,18 +34,44 @@ export function ProfileSection({ data, onChange }: ProfileSectionProps) {
       return;
     }
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       const dataUrl = ev.target?.result as string;
       setProfile({ avatar: dataUrl });
-      toast.success('Profile photo updated!');
+      try {
+        const res = await fetch('/api/user', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ avatarUrl: dataUrl }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          useProfileStore.getState().syncFromUser(json.data, profile.email);
+          toast.success('Profile photo saved!');
+        }
+      } catch {
+        toast.error('Failed to persist avatar to backend');
+      }
     };
     reader.readAsDataURL(file);
     e.target.value = '';
   };
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
     setProfile({ avatar: undefined });
-    toast.success('Profile photo removed.');
+    try {
+      const res = await fetch('/api/user', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatarUrl: null }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        useProfileStore.getState().syncFromUser(json.data, profile.email);
+        toast.success('Profile photo removed!');
+      }
+    } catch {
+      toast.error('Failed to remove photo from backend');
+    }
   };
 
   const initials = data.name.split(' ').map((n) => n[0]).join('');

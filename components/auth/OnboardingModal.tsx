@@ -340,7 +340,7 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                     <Label htmlFor="ob-username" className="text-xs font-medium">Username</Label>
                     <Input
                       id="ob-username"
-                      placeholder="johndoe"
+                      placeholder="alexmorgan"
                       value={form.username}
                       onChange={e => setForm(prev => ({ ...prev, username: e.target.value.toLowerCase() }))}
                       className={cn(errors.username && 'border-destructive focus-visible:ring-destructive')}
@@ -353,7 +353,7 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                     <Input
                       id="ob-email"
                       type="email"
-                      placeholder="john@university.edu"
+                      placeholder="alex@university.edu"
                       value={form.email}
                       onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
                       className={cn(errors.email && 'border-destructive focus-visible:ring-destructive')}

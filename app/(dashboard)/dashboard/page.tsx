@@ -41,15 +41,20 @@ import { cn } from '@/lib/utils';
 
 import { ActivityFeed } from '@/components/shared/ActivityFeed';
 
+import { useProfileStore } from '@/store/useProfileStore';
+
 // --- Main Page Component ---
 
 export default function DashboardPage() {
+  const { profile } = useProfileStore();
+  const firstName = profile.name ? profile.name.split(' ')[0] : 'Student';
+
   return (
     <div className="space-y-6 pb-12">
       {/* 1. Page Header */}
       <PageHeader
         title="Dashboard"
-        description="Welcome back, Cody. You're making excellent progress toward your placement goals."
+        description={`Welcome back, ${firstName}. You're making excellent progress toward your placement goals.`}
         actions={
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <Button variant="outline" className="w-full sm:w-auto">View Roadmap</Button>

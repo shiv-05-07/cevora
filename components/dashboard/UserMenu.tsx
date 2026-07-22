@@ -19,10 +19,11 @@ import { useAuth } from '@/hooks/useAuth';
 export function UserMenu() {
   const router = useRouter();
   const { profile } = useProfileStore();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
   const avatarSrc = mounted ? profile.avatar : undefined;
+  const displayEmail = profile.email || user?.email || '';
 
   const handleLogout = async () => {
     await signOut();
@@ -61,23 +62,23 @@ export function UserMenu() {
             </Avatar>
             <div className="flex flex-col space-y-0.5">
               <p className="text-xs font-bold text-foreground">{profile.name}</p>
-              <p className="text-[10px] text-muted-foreground truncate">{profile.email}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{displayEmail}</p>
             </div>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem render={<Link href="/profile" />} className="cursor-pointer">
+        <DropdownMenuItem onClick={() => router.push('/profile')} className="cursor-pointer">
           <User className="w-4 h-4 mr-2 text-muted-foreground" />
           <span className="text-xs sm:text-sm">Profile</span>
         </DropdownMenuItem>
 
-        <DropdownMenuItem render={<Link href="/settings" />} className="cursor-pointer">
+        <DropdownMenuItem onClick={() => router.push('/settings')} className="cursor-pointer">
           <Settings className="w-4 h-4 mr-2 text-muted-foreground" />
           <span className="text-xs sm:text-sm">Settings</span>
         </DropdownMenuItem>
 
-        <DropdownMenuItem render={<Link href="/settings?tab=appearance" />} className="cursor-pointer">
+        <DropdownMenuItem onClick={() => router.push('/settings?tab=appearance')} className="cursor-pointer">
           <Palette className="w-4 h-4 mr-2 text-muted-foreground" />
           <span className="text-xs sm:text-sm">Appearance</span>
         </DropdownMenuItem>

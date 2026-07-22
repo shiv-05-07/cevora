@@ -11,13 +11,14 @@ export function MissionSkeleton() {
   );
 }
 
-export function MissionHeroCard({ mission }: { mission: MissionState['mission'] }) {
+export function MissionHeroCard({ mission }: { mission?: MissionState['mission'] }) {
+  if (!mission) return null;
   return (
     <div className="p-6 border rounded-lg shadow-sm bg-card mb-6">
-      <h1 className="text-2xl font-bold mb-2">{mission.title}</h1>
+      <h1 className="text-2xl font-bold mb-2">{mission.title || 'Daily Mission'}</h1>
       <div className="flex gap-4 text-sm text-muted-foreground">
-        <span>Difficulty: {mission.difficulty}</span>
-        <span>XP: {mission.xpAwarded}</span>
+        <span>Difficulty: {mission.difficulty || 'BEGINNER'}</span>
+        <span>XP: {mission.xpAwarded ?? 50}</span>
       </div>
     </div>
   );

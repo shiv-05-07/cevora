@@ -3,20 +3,23 @@ import { UserRole } from "@prisma/client";
 
 export const userQueries = {
   /**
-   * Retrieves a user by their ID, including their student profile.
+   * Retrieves a user by their ID, including their role-specific profiles.
    */
   async getUserById(id: string) {
     return prisma.user.findUnique({
       where: { id },
       include: {
         studentProfile: true,
+        teacherProfile: true,
         learningProfile: true,
       },
     });
   },
 
   /**
-   * Creates a new user. If the user is a STUDENT, creates an empty student profile.
+   * Creates a new user.
+   * For STUDENT role: atomically creates StudentProfile and LearningProfile.
+   * For TEACHER or ADMIN role: atomically creates TeacherProfile ONLY.
    */
   async createUser(data: {
     id: string;
@@ -25,6 +28,9 @@ export const userQueries = {
     avatarUrl?: string | null;
     role?: UserRole;
   }) {
+    const isStudent = data.role === UserRole.STUDENT || !data.role;
+    const isTeacherOrAdmin = data.role === UserRole.TEACHER || data.role === UserRole.ADMIN;
+
     return prisma.user.create({
       data: {
         id: data.id,
@@ -32,16 +38,21 @@ export const userQueries = {
         username: data.username,
         avatarUrl: data.avatarUrl,
         ...(data.role ? { role: data.role } : {}),
-        ...(data.role === UserRole.STUDENT || !data.role
+        ...(isStudent
           ? {
-              studentProfile: {
-                create: {},
-              },
+              studentProfile: { create: {} },
+              learningProfile: { create: {} }, // onboardingCompleted defaults to false
+            }
+          : {}),
+        ...(isTeacherOrAdmin
+          ? {
+              teacherProfile: { create: {} },
             }
           : {}),
       },
       include: {
         studentProfile: true,
+        teacherProfile: true,
         learningProfile: true,
       },
     });
@@ -56,6 +67,7 @@ export const userQueries = {
       data,
       include: {
         studentProfile: true,
+        teacherProfile: true,
         learningProfile: true,
       },
     });
@@ -66,6 +78,20 @@ export const userQueries = {
    */
   async updateStudentProfile(userId: string, data: any) {
     return prisma.studentProfile.upsert({
+      where: { userId },
+      update: data,
+      create: {
+        userId,
+        ...data,
+      },
+    });
+  },
+
+  /**
+   * Upserts a teacher profile for a given user.
+   */
+  async updateTeacherProfile(userId: string, data: any) {
+    return prisma.teacherProfile.upsert({
       where: { userId },
       update: data,
       create: {

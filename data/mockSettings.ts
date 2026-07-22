@@ -3,14 +3,14 @@ import { SettingsData } from '@/types/settings';
 export const mockSettings: SettingsData = {
   profile: {
     avatar: '',
-    name: 'John Doe',
-    email: 'john.doe@student.iit.edu',
+    name: 'User',
+    email: '',
     university: 'Tech University',
     degree: 'B.Tech Computer Science',
     graduationYear: '2026',
-    targetRole: 'Backend Engineer',
-    dreamCompany: 'Amazon',
-    profileCompletion: 82,
+    targetRole: 'Software Development Engineer',
+    dreamCompany: 'Top Tech Companies',
+    profileCompletion: 85,
   },
   career: {
     targetRole: 'Backend Engineer',

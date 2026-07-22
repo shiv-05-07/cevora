@@ -52,3 +52,11 @@ export const WORKSPACE_NAVIGATION = [
   { label: 'Analytics', href: '/analytics', icon: BarChart3 },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
+
+export const TEACHER_NAVIGATION = [
+  { label: 'Dashboard', href: '/teacher/dashboard', icon: LayoutDashboard },
+  { label: 'AI Mentor', href: '/mentor', icon: Bot },
+  { label: 'Companies', href: '/companies', icon: Building2 },
+  { label: 'Settings', href: '/settings', icon: Settings },
+];
+
