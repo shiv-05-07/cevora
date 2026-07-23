@@ -72,12 +72,17 @@ model User {
   mockInterviews MockInterview[]
   progresses     UserProgress[]
 
-  // [NEW] Added for CEV-002 Adaptive Learning
+  // [NEW] Added for CEV-002 & CEV-007 Adaptive Learning & Knowledge State
   learningProfile    LearningProfile?
   diagnosticAttempts DiagnosticAttempt[]
   conceptMasteries   ConceptMastery[]
   missions           Mission[]
   learningEvents     LearningEvent[]
+  knowledgeState     KnowledgeState?
+  knowledgeSnapshots KnowledgeSnapshot[]
+  skillScores        SkillScore[]
+  weakConcepts       WeakConcept[]
+  practiceAttempts   PracticeAttempt[]
 
   @@index([role])
   @@index([status])
@@ -640,6 +645,20 @@ enum LearningEventType {
   DIAGNOSTIC_COMPLETED
 }
 
+enum DiagnosticStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  LOCKED
+}
+
+enum PlacementReadiness {
+  NEEDS_FOUNDATION
+  BUILDING_SKILLS
+  INTERVIEW_READY
+  PLACEMENT_READY
+}
+
 // ================================
 // ADAPTIVE LEARNING MODELS
 // ================================
@@ -660,9 +679,12 @@ model LearningProfile {
   learningGoals     String[] @default([])
   preferredSubjects String[] @default([])
 
-  adaptiveEnabled     Boolean @default(true)
-  diagnosticCompleted Boolean @default(false)
-  onboardingCompleted Boolean @default(false)
+  adaptiveEnabled     Boolean          @default(true)
+  diagnosticCompleted Boolean          @default(false)
+  diagnosticStatus    DiagnosticStatus @default(PENDING)
+  completedAt         DateTime?
+  attemptNumber       Int              @default(0)
+  onboardingCompleted Boolean          @default(false)
 
   // Goals & Streaks
   dailyGoalMinutes  Int?
@@ -675,6 +697,88 @@ model LearningProfile {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ================================
+// KNOWLEDGE STATE & ANALYTICS (CEV-007)
+// ================================
+
+model KnowledgeState {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @unique @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  overallMastery     Float              @default(0.0)
+  placementReadiness PlacementReadiness @default(NEEDS_FOUNDATION)
+  readinessScore     Float              @default(0.0)
+  confidenceScore    Float              @default(0.0)
+  learningVelocity   Float              @default(0.0)
+  consistencyScore   Float              @default(0.0)
+
+  lastCalculatedAt DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model KnowledgeSnapshot {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  snapshotDate      DateTime @default(now())
+  overallMastery    Float
+  readinessScore    Float
+  weakConceptsCount Int
+  growthRate        Float    @default(0.0)
+  confidenceScore   Float
+  studyMinutes      Int      @default(0)
+  missionsCompleted Int      @default(0)
+  practiceSolved    Int      @default(0)
+  diagnosticDelta   Float    @default(0.0)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, snapshotDate])
+}
+
+model SkillScore {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  category      String
+  previousScore Float  @default(0.0)
+  currentScore  Float  @default(0.0)
+  accuracy      Float  @default(0.0)
+  totalAttempts Int    @default(0)
+  correctAttempts Int  @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, category])
+  @@index([userId])
+}
+
+model WeakConcept {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  conceptId String  @db.Uuid
+  concept   Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+
+  masteryScore      Float
+  recommendedAction String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, conceptId])
+  @@index([userId])
 }
 
 model DiagnosticAttempt {
@@ -726,7 +830,8 @@ model Concept {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  masteries ConceptMastery[]
+  masteries    ConceptMastery[]
+  weakConcepts WeakConcept[]
 }
 
 model ConceptMastery {
@@ -861,4 +966,24 @@ model LearningEvent {
 
   @@index([userId])
   @@index([eventType])
+}
+
+model PracticeAttempt {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  problemId   String
+  status      String   // 'Accepted', 'Wrong Answer', etc.
+  runtime     String?
+  memory      String?
+  runtimeBeats Float?
+  memoryBeats  Float?
+
+  concepts    String[] // the slugs of the concepts associated with this problem
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

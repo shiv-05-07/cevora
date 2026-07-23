@@ -12,6 +12,7 @@ import { ProblemDescription } from '@/components/oa/solve/ProblemDescription';
 import { CodeEditor } from '@/components/oa/solve/CodeEditor';
 import { TestCasesPanel } from '@/components/oa/solve/TestCasesPanel';
 import { useJudge } from '@/hooks/useJudge';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function SolvePage() {
   const params = useParams();
@@ -24,6 +25,7 @@ export default function SolvePage() {
   
   const [isTestPanelExpanded, setIsTestPanelExpanded] = React.useState(true);
   const { status, lastAction, logs, runResult, submitResult, progress, executeRun, executeSubmit, reset } = useJudge();
+  const { user } = useAuth();
 
   React.useEffect(() => {
     // In a real app, this would fetch from an API
@@ -53,11 +55,27 @@ export default function SolvePage() {
     executeRun(problem.testCases);
   };
 
-  const handleSubmit = () => {
-    if (!problem) return;
+  const handleSubmit = async () => {
+    if (!problem || !user?.id) return;
     setIsTestPanelExpanded(true);
-    executeSubmit(language);
+    
+    // Map topicTags to conceptSlugs (e.g., "Arrays" -> "arrays")
+    const conceptSlugs = problem.topicTags.map(t => t.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+    
+    await executeSubmit(language, problem.id, conceptSlugs, user.id);
   };
+  
+  // Navigate back and invalidate queries if submit is accepted
+  React.useEffect(() => {
+    if (submitResult?.status === 'Accepted') {
+      toast.success('Solution Accepted! Your Knowledge State has been updated.');
+      // Add a slight delay to let the toast show
+      setTimeout(() => {
+        router.refresh();
+        router.push('/dashboard');
+      }, 2000);
+    }
+  }, [submitResult, router]);
 
   if (!problem) {
     return <div className="flex h-[calc(100vh-4rem)] items-center justify-center">Loading...</div>;

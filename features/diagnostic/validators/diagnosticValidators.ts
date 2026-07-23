@@ -1,12 +1,12 @@
 import { z } from 'zod';
 
-export const startDiagnosticSchema = z.object({}); // Empty for now, but kept for consistency
+export const startDiagnosticSchema = z.object({});
 
 export const submitAnswerSchema = z.object({
   attemptId: z.string().uuid(),
   questionId: z.string().min(1),
   selectedAnswer: z.string().nullable(),
-  correctAnswer: z.string(),
+  correctAnswer: z.string().optional(),
   timeTaken: z.number().int().nonnegative().optional()
 });
 

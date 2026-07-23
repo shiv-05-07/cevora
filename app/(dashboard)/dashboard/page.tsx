@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
   Target, 
@@ -42,12 +43,26 @@ import { cn } from '@/lib/utils';
 import { ActivityFeed } from '@/components/shared/ActivityFeed';
 
 import { useProfileStore } from '@/store/useProfileStore';
+import { useDiagnosticStore } from '@/store/useDiagnosticStore';
+import { useKnowledgeStore } from '@/store/useKnowledgeStore';
+import { DiagnosticBanner } from '@/components/diagnostic/DiagnosticBanner';
+import { AIInsightWidget } from '@/components/dashboard/AIInsightWidget';
 
 // --- Main Page Component ---
 
 export default function DashboardPage() {
   const { profile } = useProfileStore();
+  const { status, fetchStatus } = useDiagnosticStore();
+  const { dashboardInsights, fetchDashboardInsights, weakConcepts, fetchWeakConcepts } = useKnowledgeStore();
+
+  React.useEffect(() => {
+    fetchStatus();
+    fetchDashboardInsights();
+    fetchWeakConcepts();
+  }, [fetchStatus, fetchDashboardInsights, fetchWeakConcepts]);
+
   const firstName = profile.name ? profile.name.split(' ')[0] : 'Student';
+  const isDiagnosticCompleted = status === 'LOCKED' || status === 'COMPLETED' || (dashboardInsights?.diagnosticCompleted ?? false);
 
   return (
     <div className="space-y-6 pb-12">
@@ -63,31 +78,34 @@ export default function DashboardPage() {
         }
       />
 
+      {/* 1.5 Diagnostic Callout Banner */}
+      <DiagnosticBanner completed={isDiagnosticCompleted} status={status} />
+
       {/* 2. Top Analytics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <StatCard 
           title="Placement Readiness" 
-          value="82%" 
-          trend={{ value: '+6%', isPositive: true }} 
-          description="Weekly trend" 
+          value={dashboardInsights ? `${Math.round(dashboardInsights.readinessScore)}%` : '--'} 
+          trend={{ value: dashboardInsights?.knowledgeGrowth || '0%', isPositive: !dashboardInsights?.knowledgeGrowth?.startsWith('-') }} 
+          description="Knowledge Growth" 
           icon={Target} 
         />
         <StatCard 
           title="Problems Solved" 
-          value="247" 
-          trend={{ value: '+8', isPositive: true }} 
-          description="Today's" 
+          value={dashboardInsights ? `${dashboardInsights.snapshots?.[0]?.practiceSolved || 0}` : '--'} 
+          trend={{ value: '+1', isPositive: true }} 
+          description="Total Solved" 
           icon={Code2} 
         />
         <StatCard 
-          title="Resume Score" 
-          value="86%" 
-          description="ATS Ready" 
+          title="Overall Mastery" 
+          value={dashboardInsights ? `${Math.round(dashboardInsights.overallMastery)}%` : '--'} 
+          description="Concept Mastery" 
           icon={FileText} 
         />
         <StatCard 
           title="Learning Streak" 
-          value="19 Days" 
+          value={dashboardInsights ? `${dashboardInsights.currentStreak || 0} Days` : '--'} 
           description="Keep Going" 
           icon={Flame} 
         />
@@ -99,6 +117,9 @@ export default function DashboardPage() {
         {/* LEFT COLUMN (2 Spans) */}
         <div className="xl:col-span-2 space-y-6">
           
+          {/* AI Insight Engine Widget */}
+          <AIInsightWidget insights={dashboardInsights} />
+
           {/* Today's Focus */}
           <SectionCard 
             title="Today's Mission" 
@@ -183,15 +204,30 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <MetricCard 
                 title="Strengths" 
-                value="Arrays" 
-                subtitle="Strings, OOP" 
+                value={
+                  dashboardInsights?.skillScores
+                    ?.filter(s => s.currentScore > 60)
+                    .sort((a, b) => b.currentScore - a.currentScore)[0]?.category || "None Yet"
+                } 
+                subtitle={
+                  dashboardInsights?.skillScores
+                    ?.filter(s => s.currentScore > 60)
+                    .sort((a, b) => b.currentScore - a.currentScore)
+                    .slice(1, 3)
+                    .map(s => s.category)
+                    .join(', ') || "Practice to build strengths"
+                } 
                 icon={TrendingUp} 
                 colorVariant="success" 
               />
               <MetricCard 
                 title="Needs Improvement" 
-                value="Graphs" 
-                subtitle="Operating Systems, Computer Networks" 
+                value={weakConcepts[0]?.conceptName || "None Yet"} 
+                subtitle={
+                  weakConcepts.length > 1 
+                    ? weakConcepts.slice(1, 3).map((w: any) => w.conceptName).filter(Boolean).join(', ') 
+                    : "You are doing great!"
+                } 
                 icon={TrendingDown} 
                 colorVariant="danger" 
               />
@@ -201,7 +237,11 @@ export default function DashboardPage() {
           {/* Upcoming Opportunities */}
           <SectionCard 
             title="Upcoming Opportunities" 
-            actions={<Button variant="ghost" size="sm" className="hidden sm:inline-flex">View All</Button>}
+            actions={
+              <Link href="/companies">
+                <Button variant="ghost" size="sm" className="hidden sm:inline-flex">View All</Button>
+              </Link>
+            }
           >
             <div className="overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0">
               <Table className="min-w-[500px]">

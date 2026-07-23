@@ -82,8 +82,10 @@ export function OverlaySidebar({
                   // For landing page anchors, we check if pathname is / and href starts with #
                   const isLandingAnchor = link.href.startsWith('#');
                   const isActive = isLandingAnchor 
-                    ? false // We could track active section, but false is fine for MVP
-                    : (pathname === link.href || (pathname !== '/' && pathname?.startsWith(link.href + '/')));
+                    ? false
+                    : (link.href === '/dashboard'
+                        ? (pathname === '/dashboard' || pathname === '/dashboard/')
+                        : (pathname === link.href || (link.href !== '/' && link.href !== '/dashboard' && pathname?.startsWith(link.href))));
 
                   return (
                     <Link

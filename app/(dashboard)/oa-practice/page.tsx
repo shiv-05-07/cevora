@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { SectionCard } from '@/components/dashboard/SectionCard';
@@ -33,18 +34,23 @@ import {
 
 import { MOCK_PROBLEMS } from '@/components/oa/solve/mockProblems';
 
-export default function OAPracticePage() {
-  const [searchQuery, setSearchQuery] = React.useState('');
+function OAPracticeContent() {
+  const searchParams = useSearchParams();
+  const initialTopic = searchParams.get('topic') || '';
+  
+  const [searchQuery, setSearchQuery] = React.useState(initialTopic);
   const [difficultyFilter, setDifficultyFilter] = React.useState('all');
 
   const router = useRouter();
 
-  const handlePractice = (id?: string) => {
+  const handlePractice = (id?: string | any) => {
     const problems = Object.values(MOCK_PROBLEMS);
     let eligibleProblems = problems;
 
-    if (id && id !== 'Daily Challenge') {
-      const searchTerm = id.toLowerCase();
+    const query = typeof id === 'string' ? id : (searchQuery || undefined);
+
+    if (query && query !== 'Daily Challenge') {
+      const searchTerm = query.toLowerCase();
       // Try to find problems that match the company tag or topic tag
       eligibleProblems = problems.filter(p => 
         p.companyTags.some(tag => tag.toLowerCase() === searchTerm) ||
@@ -188,5 +194,13 @@ export default function OAPracticePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OAPracticePage() {
+  return (
+    <Suspense fallback={<div className="flex h-[calc(100vh-4rem)] items-center justify-center">Loading Practice...</div>}>
+      <OAPracticeContent />
+    </Suspense>
   );
 }

@@ -85,7 +85,9 @@ export function Sidebar({ className }: { className?: string }) {
           const isLandingAnchor = link.href.startsWith('#');
           const isActive = isLandingAnchor 
             ? false
-            : (pathname === link.href || (pathname !== '/' && pathname?.startsWith(link.href + '/')));
+            : (link.href === '/dashboard'
+                ? (pathname === '/dashboard' || pathname === '/dashboard/')
+                : (pathname === link.href || (link.href !== '/' && link.href !== '/dashboard' && pathname?.startsWith(link.href))));
           return (
             <SidebarNavItem
               key={link.label}

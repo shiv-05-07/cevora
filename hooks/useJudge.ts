@@ -45,7 +45,7 @@ export function useJudge() {
     }
   }, [addLog]);
 
-  const executeSubmit = useCallback(async (language: string) => {
+  const executeSubmit = useCallback(async (language: string, problemId: string, conceptSlugs: string[], userId: string) => {
     setStatus('Submitting');
     setLastAction('submit');
     setLogs([]);
@@ -55,6 +55,23 @@ export function useJudge() {
     try {
       const result = await MockJudge.simulateSubmit(language, addLog);
       setSubmitResult(result);
+      
+      // Hit the real backend to update intelligence
+      await fetch('/api/practice/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          problemId,
+          status: result.status,
+          runtime: result.runtime,
+          memory: result.memory,
+          runtimeBeats: result.runtimeBeats,
+          memoryBeats: result.memoryBeats,
+          conceptSlugs
+        })
+      });
+
       setStatus('Completed');
     } catch (e) {
       addLog('Error: Submission failed');

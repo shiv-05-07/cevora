@@ -38,17 +38,43 @@ import { ActivityFeed } from '@/components/shared/ActivityFeed';
 import Link from 'next/link';
 import { useWorkspace } from '@/providers/WorkspaceProvider';
 import { useProfileStore } from '@/store/useProfileStore';
+import { TeacherCohortSummary } from '@/components/teacher/TeacherCohortSummary';
+import { StudentIntelligenceModal } from '@/components/teacher/StudentIntelligenceModal';
 
 export default function TeacherDashboardPage() {
   const { profile } = useProfileStore();
   const { currentWorkspace } = useWorkspace();
+
+  const [selectedStudentId, setSelectedStudentId] = React.useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [cohortData, setCohortData] = React.useState<any | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch('/api/teacher/cohort/summary')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setCohortData(data.data);
+        }
+        setIsLoading(false);
+      })
+      .catch(() => setIsLoading(false));
+  }, []);
+
+  const handleSelectStudent = (studentId: string) => {
+    setSelectedStudentId(studentId);
+    setIsModalOpen(true);
+  };
+
+  const studentCount = cohortData?.studentCount ?? currentWorkspace.studentCount ?? 64;
 
   return (
     <div className="space-y-6 pb-12">
       {/* 1. Page Header */}
       <PageHeader
         title={`Teacher Dashboard — ${currentWorkspace.name}`}
-        description={`Welcome back, ${profile.name || 'Faculty'}. Active cohort: ${currentWorkspace.name} (${currentWorkspace.studentCount || 64} Students).`}
+        description={`Welcome back, ${profile.name || 'Faculty'}. Active cohort: ${currentWorkspace.name} (${studentCount} Students).`}
         actions={
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <Button variant="outline" className="w-full sm:w-auto">
@@ -67,20 +93,20 @@ export default function TeacherDashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <StatCard 
           title="Total Students Managed" 
-          value="148" 
+          value={String(studentCount)} 
           trend={{ value: '+12 this month', isPositive: true }} 
-          description="Across 3 batches" 
+          description="Across active batches" 
           icon={Users} 
         />
         <StatCard 
           title="Pending Resume Reviews" 
-          value="9" 
+          value={String(cohortData?.pendingResumes ?? 4)} 
           description="Action required" 
           icon={FileCheck} 
         />
         <StatCard 
           title="Avg. Placement Readiness" 
-          value="76%" 
+          value={`${cohortData?.avgReadiness ?? 74}%`} 
           trend={{ value: '+4%', isPositive: true }} 
           description="Cohort average" 
           icon={Award} 
@@ -99,6 +125,15 @@ export default function TeacherDashboardPage() {
         {/* LEFT COLUMN (2 Spans) */}
         <div className="xl:col-span-2 space-y-6">
           
+          {/* CEV-007 Teacher Cohort Knowledge State Summary */}
+          <TeacherCohortSummary 
+            avgMastery={cohortData?.avgReadiness ?? 74}
+            weakestTopic={cohortData?.weakestTopic ?? 'Operating Systems'}
+            strongestTopic={cohortData?.strongestTopic ?? 'SQL & DBMS'}
+            studentsNeedingHelp={cohortData?.studentsNeedingHelp}
+            onSelectStudent={handleSelectStudent} 
+          />
+
           {/* Cohort Performance Overview */}
           <SectionCard 
             title="Batch Performance Overview" 
@@ -149,7 +184,11 @@ export default function TeacherDashboardPage() {
           {/* Pending Resumes Table */}
           <SectionCard 
             title="Resumes Awaiting Verification" 
-            actions={<Button variant="ghost" size="sm">View All (9)</Button>}
+            actions={
+              <Link href="/resume">
+                <Button variant="ghost" size="sm">View All (9)</Button>
+              </Link>
+            }
           >
             <div className="overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0">
               <Table className="min-w-[550px]">
@@ -164,13 +203,13 @@ export default function TeacherDashboardPage() {
                 </TableHeader>
                 <TableBody>
                   {[
-                    { name: 'Aarav Sharma', batch: 'CSE 2026', role: 'Frontend Engineer', score: '88%', status: 'success' },
-                    { name: 'Priya Verma', batch: 'IT 2026', role: 'SDE-1', score: '82%', status: 'success' },
-                    { name: 'Rohan Gupta', batch: 'CSE 2026', role: 'Full Stack Engineer', score: '74%', status: 'warning' },
-                    { name: 'Sneha Patel', batch: 'ECE 2026', role: 'Data Analyst', score: '69%', status: 'neutral' },
+                    { id: 'usr_1', name: 'Aarav Sharma', batch: 'CSE 2026', role: 'Frontend Engineer', score: '88%', status: 'success' },
+                    { id: 'usr_2', name: 'Priya Verma', batch: 'IT 2026', role: 'SDE-1', score: '82%', status: 'success' },
+                    { id: 'usr_3', name: 'Rohan Gupta', batch: 'CSE 2026', role: 'Full Stack Engineer', score: '74%', status: 'warning' },
+                    { id: 'usr_4', name: 'Sneha Patel', batch: 'ECE 2026', role: 'Data Analyst', score: '69%', status: 'neutral' },
                   ].map((student, i) => (
                     <TableRow key={i}>
-                      <TableCell className="font-bold flex items-center gap-2">
+                      <TableCell className="font-bold flex items-center gap-2 cursor-pointer" onClick={() => handleSelectStudent(student.id)}>
                         <UserCheck className="w-4 h-4 text-primary shrink-0" />
                         {student.name}
                       </TableCell>
@@ -178,7 +217,12 @@ export default function TeacherDashboardPage() {
                       <TableCell className="font-medium text-xs">{student.role}</TableCell>
                       <TableCell><StatusBadge status={student.status as any}>{student.score}</StatusBadge></TableCell>
                       <TableCell className="text-right">
-                        <Button variant="outline" size="sm" className="h-8 text-xs font-semibold">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled
+                          className="h-8 text-xs font-semibold"
+                        >
                           Review
                         </Button>
                       </TableCell>
@@ -277,6 +321,13 @@ export default function TeacherDashboardPage() {
 
         </div>
       </div>
+
+      {/* Student Intelligence Modal */}
+      <StudentIntelligenceModal
+        studentId={selectedStudentId}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }
