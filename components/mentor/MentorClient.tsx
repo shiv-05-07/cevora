@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import { Conversation, ChatMessage } from '@/types/mentor';
-import { mockMentorHistory } from '@/data/mockMentor';
 import { MentorSidebar } from './MentorSidebar';
 import { ChatWindow } from './ChatWindow';
 import { MentorProfile } from './MentorProfile';
@@ -14,8 +13,10 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export function MentorClient() {
-  const [conversations, setConversations] = React.useState<Conversation[]>(mockMentorHistory);
+  const [conversations, setConversations] = React.useState<Conversation[]>([]);
   const [activeId, setActiveId] = React.useState<string | null>(null);
+  const [isLoadingChats, setIsLoadingChats] = React.useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = React.useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [isInsightsOpen, setIsInsightsOpen] = React.useState(false);
   const [isStreaming, setIsStreaming] = React.useState(false);
@@ -23,9 +24,92 @@ export function MentorClient() {
 
   const activeConversation = conversations.find(c => c.id === activeId) || null;
 
-  const handleSelectConversation = (id: string) => {
+  // Load recent career chats on mount
+  const fetchRecentChats = React.useCallback(async () => {
+    try {
+      setIsLoadingChats(true);
+      const res = await fetch('/api/ai-mentor/chats');
+      if (!res.ok) {
+        throw new Error(`Failed to load chats (${res.status})`);
+      }
+      const data = await res.json();
+      if (data.success && Array.isArray(data.chats)) {
+        const now = Date.now();
+        const mapped: Conversation[] = data.chats.map((c: any) => {
+          const updatedDate = new Date(c.updatedAt);
+          // Conversations updated within last 7 days go into 'recent', otherwise 'older'
+          const isRecent = now - updatedDate.getTime() < 7 * 24 * 60 * 60 * 1000;
+          return {
+            id: c.id,
+            title: c.title || 'Career Discussion',
+            lastUpdated: updatedDate,
+            category: isRecent ? 'recent' : 'older',
+            messages: [],
+          };
+        });
+        setConversations(mapped);
+      }
+    } catch (error) {
+      console.error('[MentorClient] Failed to load recent chats:', error);
+    } finally {
+      setIsLoadingChats(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchRecentChats();
+  }, [fetchRecentChats]);
+
+  // Select an existing conversation and fetch its messages if not already loaded
+  const handleSelectConversation = async (id: string) => {
     setActiveId(id);
     setIsSidebarOpen(false);
+
+    const existingConv = conversations.find(c => c.id === id);
+    if (existingConv && existingConv.messages.length > 0) {
+      return;
+    }
+
+    try {
+      setIsLoadingMessages(true);
+      const res = await fetch(`/api/ai-mentor/chats/${id}`);
+      if (!res.ok) {
+        if (res.status === 404) {
+          toast.error('Conversation not found.');
+          setActiveId(null);
+        } else {
+          toast.error('Failed to load conversation history.');
+        }
+        return;
+      }
+
+      const data = await res.json();
+      if (data.success && data.chat) {
+        const loadedMessages: ChatMessage[] = (data.chat.messages || []).map((m: any) => ({
+          id: m.id,
+          role: (m.role?.toLowerCase() === 'assistant' ? 'assistant' : 'user') as 'user' | 'assistant',
+          content: m.content,
+          timestamp: new Date(m.createdAt),
+        }));
+
+        setConversations(prev => prev.map(c => {
+          if (c.id === id) {
+            return {
+              ...c,
+              title: data.chat.title || c.title,
+              messages: loadedMessages,
+              lastUpdated: new Date(data.chat.updatedAt),
+            };
+          }
+          return c;
+        }));
+      }
+    } catch (err) {
+      console.error('[MentorClient] Error loading messages:', err);
+      toast.error('Network error loading conversation history.');
+    } finally {
+      setIsLoadingMessages(false);
+    }
   };
 
   const handleNewChat = () => {
@@ -40,11 +124,12 @@ export function MentorClient() {
     isStreamingRef.current = true;
     setIsStreaming(true);
 
-    let currentConversationId = activeId;
-    let newConversations = [...conversations];
+    const currentActiveId = activeId;
+    const isNewConversation = !currentActiveId;
+    const tempId = isNewConversation ? `temp-${Date.now()}` : currentActiveId;
 
     // Collect recent history from active conversation, filtering out failed attempts or system errors
-    const existingConv = conversations.find(c => c.id === currentConversationId);
+    const existingConv = conversations.find(c => c.id === currentActiveId);
     const historyPayload = existingConv
       ? existingConv.messages
           .filter(m => {
@@ -69,37 +154,37 @@ export function MentorClient() {
           }))
       : [];
 
-
-    if (!currentConversationId) {
-      // Create new conversation
-      const newId = `c${Date.now()}`;
-      const newConv: Conversation = {
-        id: newId,
-        title: trimmed.slice(0, 30) + '...',
-        lastUpdated: new Date(),
-        category: 'recent',
-        messages: []
-      };
-      newConversations.unshift(newConv);
-      currentConversationId = newId;
-      setActiveId(newId);
-    }
-
     const userMessage: ChatMessage = {
       id: `m${Date.now()}`,
       role: 'user',
       content: trimmed,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
-    // Add user message to state
-    newConversations = newConversations.map(c => {
-      if (c.id === currentConversationId) {
-        return { ...c, messages: [...c.messages, userMessage], lastUpdated: new Date() };
-      }
-      return c;
-    });
-    setConversations(newConversations);
+    if (isNewConversation) {
+      const optimisticConv: Conversation = {
+        id: tempId,
+        title: trimmed.length > 36 ? trimmed.slice(0, 36) + '...' : trimmed,
+        lastUpdated: new Date(),
+        category: 'recent',
+        messages: [userMessage],
+      };
+      setActiveId(tempId);
+      setConversations(prev => [optimisticConv, ...prev]);
+    } else {
+      setConversations(prev =>
+        prev.map(c => {
+          if (c.id === currentActiveId) {
+            return {
+              ...c,
+              messages: [...c.messages, userMessage],
+              lastUpdated: new Date(),
+            };
+          }
+          return c;
+        })
+      );
+    }
 
     try {
       const res = await fetch('/api/ai-mentor/chat', {
@@ -109,6 +194,7 @@ export function MentorClient() {
         },
         body: JSON.stringify({
           message: trimmed,
+          chatId: (currentActiveId && !currentActiveId.startsWith('temp-')) ? currentActiveId : undefined,
           history: historyPayload,
         }),
       });
@@ -116,25 +202,45 @@ export function MentorClient() {
       const data = await res.json();
 
       const assistantMessageId = `a${Date.now()}`;
+      const isSuccess = data.success && !!data.reply;
       const assistantMessage: ChatMessage = {
         id: assistantMessageId,
         role: 'assistant',
-        content: data.success && data.reply
+        content: isSuccess
           ? data.reply
           : (data.error || 'Sorry, I could not generate a response right now. Please try again.'),
         timestamp: new Date(),
       };
 
-      if (!data.success) {
+      if (!isSuccess) {
         toast.error(data.error || 'Unable to generate response.');
       }
 
-      setConversations(prev => prev.map(c => {
-        if (c.id === currentConversationId) {
-          return { ...c, messages: [...c.messages, assistantMessage], lastUpdated: new Date() };
-        }
-        return c;
-      }));
+      const realChatId = data.chatId || tempId;
+      const finalTitle = data.title;
+
+      setConversations(prev => {
+        const targetId = isNewConversation ? tempId : currentActiveId;
+        const updated = prev.map(c => {
+          if (c.id === targetId) {
+            return {
+              ...c,
+              id: realChatId,
+              title: finalTitle || c.title,
+              messages: [...c.messages, assistantMessage],
+              lastUpdated: new Date(),
+            };
+          }
+          return c;
+        });
+
+        // Keep sorted by lastUpdated DESC so newest activity stays on top
+        return [...updated].sort((a, b) => b.lastUpdated.getTime() - a.lastUpdated.getTime());
+      });
+
+      if (isNewConversation && data.chatId) {
+        setActiveId(data.chatId);
+      }
     } catch (error) {
       console.error('[MentorClient] Error calling AI Mentor API:', error);
       const assistantMessageId = `a${Date.now()}`;
@@ -146,18 +252,20 @@ export function MentorClient() {
       };
       toast.error('Network error. Unable to reach AI Mentor.');
 
-      setConversations(prev => prev.map(c => {
-        if (c.id === currentConversationId) {
-          return { ...c, messages: [...c.messages, errorMessage], lastUpdated: new Date() };
-        }
-        return c;
-      }));
+      setConversations(prev => {
+        const targetId = isNewConversation ? tempId : currentActiveId;
+        return prev.map(c => {
+          if (c.id === targetId) {
+            return { ...c, messages: [...c.messages, errorMessage], lastUpdated: new Date() };
+          }
+          return c;
+        });
+      });
     } finally {
       isStreamingRef.current = false;
       setIsStreaming(false);
     }
   };
-
 
   return (
     <div className="flex h-full w-full bg-background overflow-hidden relative">
@@ -180,6 +288,7 @@ export function MentorClient() {
           activeId={activeId} 
           onSelect={handleSelectConversation}
           onNewChat={handleNewChat}
+          isLoading={isLoadingChats}
         />
       </div>
 
@@ -202,6 +311,7 @@ export function MentorClient() {
           conversation={activeConversation} 
           onSendMessage={handleSendMessage}
           isStreaming={isStreaming}
+          isLoadingChat={isLoadingMessages}
         />
       </div>
 

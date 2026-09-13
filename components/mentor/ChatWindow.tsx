@@ -5,15 +5,16 @@ import { ChatMessage as ChatMessageComponent } from './ChatMessage';
 import { ChatInput } from './ChatInput';
 import { SuggestedPrompts } from './SuggestedPrompts';
 import { TypingIndicator } from './TypingIndicator';
-import { Bot } from 'lucide-react';
+import { Bot, Loader2 } from 'lucide-react';
 
 interface ChatWindowProps {
   conversation: Conversation | null;
   onSendMessage: (message: string) => void;
   isStreaming: boolean;
+  isLoadingChat?: boolean;
 }
 
-export function ChatWindow({ conversation, onSendMessage, isStreaming }: ChatWindowProps) {
+export function ChatWindow({ conversation, onSendMessage, isStreaming, isLoadingChat }: ChatWindowProps) {
   const bottomRef = React.useRef<HTMLDivElement>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const prevConvId = React.useRef<string | undefined>(undefined);
@@ -40,7 +41,12 @@ export function ChatWindow({ conversation, onSendMessage, isStreaming }: ChatWin
     <div className="flex-1 flex flex-col min-h-0 relative bg-muted/5">
       <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
         <div className="max-w-4xl mx-auto w-full p-4 sm:p-6 lg:p-8 space-y-6">
-          {!conversation || conversation.messages.length === 0 ? (
+          {isLoadingChat ? (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-muted-foreground animate-in fade-in duration-300">
+              <Loader2 className="w-8 h-8 animate-spin text-primary/70" />
+              <span className="text-xs font-medium">Loading chat history...</span>
+            </div>
+          ) : !conversation || conversation.messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center min-h-[60vh] animate-in fade-in slide-in-from-bottom-4 duration-700">
               <div className="w-20 h-20 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mb-6 shadow-sm border border-primary/20">
                 <Bot className="w-10 h-10" />

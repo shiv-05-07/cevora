@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import { requireAppUser } from "@/lib/auth/requireUser";
+import { aiChatService, generateChatTitle } from "@/services/aiChat";
+
 
 const AI_MENTOR_SYSTEM_INSTRUCTION = `You are Cevora's AI Career Mentor.
 You are not a generic chatbot. You are a practical placement-preparation coach whose primary goal is to help students become more capable, interview-ready, and career-ready.
@@ -64,8 +66,10 @@ interface HistoryItem {
 
 export async function POST(request: NextRequest) {
   // 1. Verify user authentication
+  let appUser: { id: string };
   try {
-    await requireAppUser();
+    const authResult = await requireAppUser();
+    appUser = authResult.appUser;
   } catch (authError: any) {
     console.warn("[AI Mentor Internal Error: Authentication Failure] User session missing or invalid.");
     const status = typeof authError?.status === "number" ? authError.status : 401;
@@ -76,7 +80,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 2. Parse and validate request body
-  let body: { message?: unknown; history?: unknown };
+  let body: { message?: unknown; chatId?: unknown; history?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -86,7 +90,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { message, history } = body;
+  const { message, chatId } = body;
 
   if (typeof message !== "string") {
     return NextResponse.json(
@@ -120,47 +124,57 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 4. Format multi-turn conversation history
+  // 4. Resolve or create AIChat with strict user ownership
+  let currentChat: { id: string; title: string | null; messages?: any[] };
   const formattedContents: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
 
-  if (Array.isArray(history)) {
-    // Only take the last 10 messages to maintain reasonable token usage
-    const recentHistory = history.slice(-10) as HistoryItem[];
+  if (typeof chatId === "string" && chatId.trim()) {
+    const isValidUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(chatId.trim());
+    if (!isValidUuid) {
+      return NextResponse.json(
+        { success: false, error: "Invalid chat ID format." },
+        { status: 400 }
+      );
+    }
 
-    for (const item of recentHistory) {
-      if (
-        item &&
-        typeof item === "object" &&
-        (item.role === "user" || item.role === "assistant") &&
-        typeof item.content === "string" &&
-        item.content.trim().length > 0
-      ) {
+    const foundChat = await aiChatService.getUserCareerChatWithMessages(chatId.trim(), appUser.id);
+    if (!foundChat) {
+      return NextResponse.json(
+        { success: false, error: "Chat not found or access denied." },
+        { status: 404 }
+      );
+    }
+
+    currentChat = foundChat;
+
+    // Load verified conversation history from database (latest 10 messages)
+    if (foundChat.messages && foundChat.messages.length > 0) {
+      const recentMessages = foundChat.messages.slice(-10);
+      for (const item of recentMessages) {
         const cleanContent = item.content.trim();
-        // Skip previous error notices so they don't pollute the prompt
-        if (
-          item.role === "assistant" &&
-          (cleanContent.startsWith("Sorry, I") ||
-            cleanContent.startsWith("Unable to generate") ||
-            cleanContent.startsWith("Too many requests") ||
-            cleanContent.startsWith("The AI Mentor is temporarily unavailable"))
-        ) {
-          continue;
-        }
-
+        if (!cleanContent) continue;
         formattedContents.push({
-          role: item.role === "assistant" ? "model" : "user",
+          role: item.role === "ASSISTANT" ? "model" : "user",
           parts: [{ text: cleanContent.slice(0, 4000) }],
         });
       }
-    }
 
-    // Gemini multi-turn must start with a 'user' turn
-    while (formattedContents.length > 0 && formattedContents[0].role === "model") {
-      formattedContents.shift();
+      // Gemini multi-turn must start with a 'user' turn
+      while (formattedContents.length > 0 && formattedContents[0].role === "model") {
+        formattedContents.shift();
+      }
     }
+  } else {
+    // New chat: generate title locally and persist new AIChat
+    const title = generateChatTitle(trimmedMessage);
+    const newChat = await aiChatService.createCareerChat(appUser.id, title);
+    currentChat = newChat;
   }
 
-  // Append the current user message
+  // Save the incoming user message to database
+  await aiChatService.saveMessage(currentChat.id, "USER", trimmedMessage);
+
+  // Append the current user message to Gemini payload
   formattedContents.push({
     role: "user",
     parts: [{ text: trimmedMessage }],
@@ -194,13 +208,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Persist ASSISTANT message to database and touch chat timestamp
+    await aiChatService.saveMessage(currentChat.id, "ASSISTANT", reply);
+    await aiChatService.updateChatTimestamp(currentChat.id);
+
     if (process.env.NODE_ENV === "development") {
-      console.log(`[AI Mentor] Completed generation in ${durationMs}ms (length: ${reply.length}, model: ${model}).`);
+      console.log(`[AI Mentor] Completed generation in ${durationMs}ms (length: ${reply.length}, model: ${model}, chatId: ${currentChat.id}).`);
     }
 
     return NextResponse.json({
       success: true,
       reply,
+      chatId: currentChat.id,
+      title: currentChat.title,
     });
   } catch (apiError: any) {
     const durationMs = Date.now() - startTime;
