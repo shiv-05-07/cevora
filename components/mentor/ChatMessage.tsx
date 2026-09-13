@@ -19,8 +19,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
   };
 
   const formatContent = (content: string) => {
-    // Strictly sanitize to prevent raw script execution or HTML injection
-    const sanitizedContent = content.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    // 1. Sanitize to prevent script execution, and unescape backslash-escaped markdown characters (e.g. \---, \*, \####)
+    const sanitizedContent = content
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/\\([*#_\-`~\[\]()|>+])/g, '$1');
+
     const lines = sanitizedContent.split('\n');
     let inCodeBlock = false;
     let codeContent = '';
@@ -28,13 +31,23 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+      const trimmedLine = line.trim();
 
-      if (line.startsWith('```')) {
+      // Fenced code block detection
+      if (trimmedLine.startsWith('```')) {
         if (inCodeBlock) {
           result.push(
             <div key={`code-${i}`} className="bg-muted p-4 rounded-xl my-3 overflow-x-auto text-sm font-mono border border-border/60 shadow-sm relative group">
               <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button variant="ghost" size="icon-sm" className="h-6 w-6 text-muted-foreground hover:text-foreground">
+                <Button 
+                  variant="ghost" 
+                  size="icon-sm" 
+                  className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    navigator.clipboard.writeText(codeContent.trim());
+                    toast.success("Code snippet copied");
+                  }}
+                >
                   <Copy className="w-3 h-3" />
                 </Button>
               </div>
@@ -54,37 +67,73 @@ export function ChatMessage({ message }: ChatMessageProps) {
         continue;
       }
 
-      if (line.startsWith('# ')) {
-        result.push(<h1 key={i} className="text-2xl font-extrabold mt-6 mb-3">{parseInline(line.substring(2))}</h1>);
-      } else if (line.startsWith('## ')) {
-        result.push(<h2 key={i} className="text-xl font-bold mt-5 mb-2">{parseInline(line.substring(3))}</h2>);
-      } else if (line.startsWith('### ')) {
-        result.push(<h3 key={i} className="text-lg font-bold mt-4 mb-2">{parseInline(line.substring(4))}</h3>);
-      } else if (line.startsWith('- ') || line.startsWith('* ')) {
+      // Horizontal rules (---, ***, ___)
+      if (/^[-*_]{3,}\s*$/.test(trimmedLine)) {
+        result.push(<hr key={`hr-${i}`} className="my-4 border-t border-border/60" />);
+        continue;
+      }
+
+      // Headings (supports # through ######)
+      const headingMatch = trimmedLine.match(/^(#{1,6})\s+(.*)$/);
+      if (headingMatch) {
+        const level = headingMatch[1].length;
+        const headingText = headingMatch[2];
+        if (level === 1) {
+          result.push(<h1 key={i} className="text-2xl font-extrabold mt-6 mb-3 text-foreground">{parseInline(headingText)}</h1>);
+        } else if (level === 2) {
+          result.push(<h2 key={i} className="text-xl font-bold mt-5 mb-2 text-foreground">{parseInline(headingText)}</h2>);
+        } else if (level === 3) {
+          result.push(<h3 key={i} className="text-lg font-bold mt-4 mb-2 text-foreground">{parseInline(headingText)}</h3>);
+        } else {
+          result.push(<h4 key={i} className="text-base font-semibold mt-3 mb-1.5 text-foreground">{parseInline(headingText)}</h4>);
+        }
+        continue;
+      }
+
+      // Bullet lists (supports -, *, + and indented variants)
+      const bulletMatch = line.match(/^(\s*)([-*+])\s+(.*)$/);
+      if (bulletMatch) {
+        const indent = bulletMatch[1].length;
+        const text = bulletMatch[3];
+        const mlClass = indent >= 4 ? "ml-8" : indent >= 2 ? "ml-6" : "ml-4";
         result.push(
-          <li key={i} className="ml-5 list-disc marker:text-primary/70 mb-1 leading-relaxed">
-            {parseInline(line.substring(2))}
-          </li>
-        );
-      } else if (/^\d+\.\s/.test(line)) {
-        const text = line.replace(/^\d+\.\s/, '');
-        result.push(
-          <li key={i} className="ml-5 list-decimal marker:text-primary/70 mb-1 font-medium leading-relaxed">
+          <li key={i} className={cn(mlClass, "list-disc marker:text-primary/70 mb-1 leading-relaxed text-foreground/90")}>
             {parseInline(text)}
           </li>
         );
-      } else if (line.startsWith('> ')) {
+        continue;
+      }
+
+      // Numbered lists (supports 1. and indented variants)
+      const numberMatch = line.match(/^(\s*)(\d+)\.\s+(.*)$/);
+      if (numberMatch) {
+        const indent = numberMatch[1].length;
+        const text = numberMatch[3];
+        const mlClass = indent >= 4 ? "ml-8" : indent >= 2 ? "ml-6" : "ml-4";
+        result.push(
+          <li key={i} className={cn(mlClass, "list-decimal marker:text-primary/70 mb-1 font-medium leading-relaxed text-foreground/90")}>
+            {parseInline(text)}
+          </li>
+        );
+        continue;
+      }
+
+      // Blockquotes
+      if (trimmedLine.startsWith('> ')) {
         result.push(
           <blockquote key={i} className="border-l-4 border-primary pl-4 py-1 my-3 bg-primary/5 rounded-r-lg italic text-muted-foreground">
-            {parseInline(line.substring(2))}
+            {parseInline(trimmedLine.substring(2))}
           </blockquote>
         );
-      } else if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
-        // Simple Markdown Table parsing
-        if (line.replace(/\s/g, '').match(/^\|[-|:]+\|$/)) {
+        continue;
+      }
+
+      // Markdown Tables
+      if (trimmedLine.startsWith('|') && trimmedLine.endsWith('|')) {
+        if (trimmedLine.replace(/\s/g, '').match(/^\|[-|:]+\|$/)) {
           continue; // Skip separator line
         }
-        const cells = line.split('|').slice(1, -1).map(c => c.trim());
+        const cells = trimmedLine.split('|').slice(1, -1).map(c => c.trim());
         result.push(
           <div key={`tr-${i}`} className="flex border-b border-border/50 py-2 last:border-0 bg-card">
             {cells.map((cell, idx) => (
@@ -94,29 +143,39 @@ export function ChatMessage({ message }: ChatMessageProps) {
             ))}
           </div>
         );
-      } else if (line.trim() === '') {
-        result.push(<div key={`br-${i}`} className="h-2" />);
-      } else {
-        result.push(<p key={i} className="mb-2 leading-relaxed text-foreground/90">{parseInline(line)}</p>);
+        continue;
       }
+
+      // Empty lines
+      if (trimmedLine === '') {
+        result.push(<div key={`br-${i}`} className="h-2" />);
+        continue;
+      }
+
+      // Standard paragraph
+      result.push(<p key={i} className="mb-2 leading-relaxed text-foreground/90">{parseInline(line)}</p>);
     }
+
     return result;
   };
 
   const parseInline = (text: string) => {
-    // Handle bold
-    let parsed: React.ReactNode[] = text.split(/(\*\*.*?\*\*)/g).map((part, i) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
+    // 1. Handle bold (**text** or __text__)
+    let parsed: React.ReactNode[] = text.split(/(\*\*.*?\*\*|__.*?__)/g).map((part, i) => {
+      if ((part.startsWith('**') && part.endsWith('**')) || (part.startsWith('__') && part.endsWith('__'))) {
         return <strong key={`b-${i}`} className="font-bold text-foreground">{part.slice(2, -2)}</strong>;
       }
       return part;
     });
 
-    // Handle italic
+    // 2. Handle italic (*text* or _text_)
     parsed = parsed.flatMap((part, i) => {
       if (typeof part === 'string') {
-        return part.split(/(\*.*?\*)/g).map((subPart, j) => {
-          if (subPart.startsWith('*') && subPart.endsWith('*') && !subPart.startsWith('**')) {
+        return part.split(/(\*.*?\*|_.*?_)/g).map((subPart, j) => {
+          if (
+            (subPart.startsWith('*') && subPart.endsWith('*') && !subPart.startsWith('**')) ||
+            (subPart.startsWith('_') && subPart.endsWith('_') && !subPart.startsWith('__'))
+          ) {
             return <em key={`i-${i}-${j}`} className="italic">{subPart.slice(1, -1)}</em>;
           }
           return subPart;
@@ -125,12 +184,12 @@ export function ChatMessage({ message }: ChatMessageProps) {
       return part;
     });
 
-    // Handle inline code
+    // 3. Handle inline code (`code`)
     parsed = parsed.flatMap((part, i) => {
       if (typeof part === 'string') {
         return part.split(/(`.*?`)/g).map((subPart, j) => {
           if (subPart.startsWith('`') && subPart.endsWith('`')) {
-            return <code key={`c-${i}-${j}`} className="px-1.5 py-0.5 bg-muted rounded-md text-[13px] font-mono text-primary">{subPart.slice(1, -1)}</code>;
+            return <code key={`c-${i}-${j}`} className="px-1.5 py-0.5 bg-muted rounded-md text-[13px] font-mono text-primary font-semibold">{subPart.slice(1, -1)}</code>;
           }
           return subPart;
         });
@@ -138,7 +197,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
       return part;
     });
 
-    // Handle links
+    // 4. Handle links ([text](url))
     parsed = parsed.flatMap((part, i) => {
       if (typeof part === 'string') {
         const linkMatch = part.match(/\[(.*?)\]\((.*?)\)/);
@@ -156,6 +215,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
     return parsed;
   };
+
 
   return (
     <div className={cn(

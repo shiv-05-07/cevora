@@ -11,14 +11,23 @@ interface ChatInputProps {
 export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [input, setInput] = React.useState('');
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const isSubmittingRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!disabled) {
+      isSubmittingRef.current = false;
+    }
+  }, [disabled]);
 
   const handleSend = () => {
-    if (!input.trim() || disabled) return;
-    onSend(input);
+    const trimmed = input.trim();
+    if (!trimmed || disabled || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setInput('');
     if (textareaRef.current) {
       textareaRef.current.style.height = '60px';
     }
+    onSend(trimmed);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -27,6 +36,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
       handleSend();
     }
   };
+
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);

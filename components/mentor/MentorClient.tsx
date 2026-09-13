@@ -11,7 +11,7 @@ import { MentorTools } from './MentorTools';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { simulateMentorStreaming } from '@/lib/mockMentor';
+import { toast } from 'sonner';
 
 export function MentorClient() {
   const [conversations, setConversations] = React.useState<Conversation[]>(mockMentorHistory);
@@ -19,6 +19,7 @@ export function MentorClient() {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [isInsightsOpen, setIsInsightsOpen] = React.useState(false);
   const [isStreaming, setIsStreaming] = React.useState(false);
+  const isStreamingRef = React.useRef(false);
 
   const activeConversation = conversations.find(c => c.id === activeId) || null;
 
@@ -33,17 +34,48 @@ export function MentorClient() {
   };
 
   const handleSendMessage = async (content: string) => {
+    const trimmed = content.trim();
+    if (!trimmed || isStreamingRef.current || isStreaming) return;
+
+    isStreamingRef.current = true;
     setIsStreaming(true);
 
     let currentConversationId = activeId;
     let newConversations = [...conversations];
+
+    // Collect recent history from active conversation, filtering out failed attempts or system errors
+    const existingConv = conversations.find(c => c.id === currentConversationId);
+    const historyPayload = existingConv
+      ? existingConv.messages
+          .filter(m => {
+            const text = m.content?.trim();
+            if (!text) return false;
+            if (m.role === 'assistant') {
+              if (
+                text.startsWith('Sorry, I') ||
+                text.startsWith('Unable to generate') ||
+                text.startsWith('Too many requests') ||
+                text.startsWith('The AI Mentor is temporarily unavailable')
+              ) {
+                return false;
+              }
+            }
+            return true;
+          })
+          .slice(-10)
+          .map(m => ({
+            role: m.role,
+            content: m.content,
+          }))
+      : [];
+
 
     if (!currentConversationId) {
       // Create new conversation
       const newId = `c${Date.now()}`;
       const newConv: Conversation = {
         id: newId,
-        title: content.slice(0, 30) + '...',
+        title: trimmed.slice(0, 30) + '...',
         lastUpdated: new Date(),
         category: 'recent',
         messages: []
@@ -56,11 +88,11 @@ export function MentorClient() {
     const userMessage: ChatMessage = {
       id: `m${Date.now()}`,
       role: 'user',
-      content,
+      content: trimmed,
       timestamp: new Date()
     };
 
-    // Add user message
+    // Add user message to state
     newConversations = newConversations.map(c => {
       if (c.id === currentConversationId) {
         return { ...c, messages: [...c.messages, userMessage], lastUpdated: new Date() };
@@ -69,44 +101,63 @@ export function MentorClient() {
     });
     setConversations(newConversations);
 
-    // Mock thinking delay to allow typing indicator phases to render
-    await new Promise(r => setTimeout(r, 1500));
+    try {
+      const res = await fetch('/api/ai-mentor/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: trimmed,
+          history: historyPayload,
+        }),
+      });
 
-    // Create empty assistant message
-    const assistantMessageId = `a${Date.now()}`;
-    const assistantMessage: ChatMessage = {
-      id: assistantMessageId,
-      role: 'assistant',
-      content: '',
-      timestamp: new Date()
-    };
+      const data = await res.json();
 
-    newConversations = newConversations.map(c => {
-      if (c.id === currentConversationId) {
-        return { ...c, messages: [...c.messages, assistantMessage] };
+      const assistantMessageId = `a${Date.now()}`;
+      const assistantMessage: ChatMessage = {
+        id: assistantMessageId,
+        role: 'assistant',
+        content: data.success && data.reply
+          ? data.reply
+          : (data.error || 'Sorry, I could not generate a response right now. Please try again.'),
+        timestamp: new Date(),
+      };
+
+      if (!data.success) {
+        toast.error(data.error || 'Unable to generate response.');
       }
-      return c;
-    });
-    setConversations(newConversations);
 
-    // Stream
-    for await (const chunk of simulateMentorStreaming(content)) {
       setConversations(prev => prev.map(c => {
         if (c.id === currentConversationId) {
-          const updatedMessages = c.messages.map(m => {
-            if (m.id === assistantMessageId) {
-              return { ...m, content: m.content + chunk };
-            }
-            return m;
-          });
-          return { ...c, messages: updatedMessages };
+          return { ...c, messages: [...c.messages, assistantMessage], lastUpdated: new Date() };
         }
         return c;
       }));
-    }
+    } catch (error) {
+      console.error('[MentorClient] Error calling AI Mentor API:', error);
+      const assistantMessageId = `a${Date.now()}`;
+      const errorMessage: ChatMessage = {
+        id: assistantMessageId,
+        role: 'assistant',
+        content: 'Sorry, I encountered a network error while trying to reach the mentor. Please check your connection and try again.',
+        timestamp: new Date(),
+      };
+      toast.error('Network error. Unable to reach AI Mentor.');
 
-    setIsStreaming(false);
+      setConversations(prev => prev.map(c => {
+        if (c.id === currentConversationId) {
+          return { ...c, messages: [...c.messages, errorMessage], lastUpdated: new Date() };
+        }
+        return c;
+      }));
+    } finally {
+      isStreamingRef.current = false;
+      setIsStreaming(false);
+    }
   };
+
 
   return (
     <div className="flex h-full w-full bg-background overflow-hidden relative">
