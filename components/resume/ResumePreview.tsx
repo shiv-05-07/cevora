@@ -6,15 +6,24 @@ interface ResumePreviewProps {
   fileName: string;
   date: Date;
   onReplace: () => void;
+  resumeId?: string;
+  fileType?: string;
 }
 
-export function ResumePreview({ fileName, date, onReplace }: ResumePreviewProps) {
+export function ResumePreview({ fileName, date, onReplace, resumeId, fileType }: ResumePreviewProps) {
   const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const dateString = date.toLocaleDateString();
 
   const handleDownload = () => {
-    toast.success("Mock PDF exported successfully.");
+    if (resumeId) {
+      window.open(`/api/resume/${resumeId}/download`, '_blank');
+      toast.success("Downloading resume file...");
+    } else {
+      toast.info("Original file not available for direct download.");
+    }
   };
+
+  const isDocx = fileName.toLowerCase().endsWith('.docx') || fileName.toLowerCase().endsWith('.doc') || fileType === 'docx';
 
   return (
     <div className="border border-border/60 rounded-2xl bg-card shadow-sm overflow-hidden flex flex-col">
@@ -23,8 +32,8 @@ export function ResumePreview({ fileName, date, onReplace }: ResumePreviewProps)
           <FileText className="w-4 h-4" />
           Resume Preview
         </h3>
-        <span className="text-xs font-semibold text-muted-foreground bg-background px-2 py-1 rounded-md border border-border/40">
-          PDF
+        <span className="text-xs font-semibold text-muted-foreground bg-background px-2 py-1 rounded-md border border-border/40 uppercase">
+          {isDocx ? 'DOCX' : 'PDF'}
         </span>
       </div>
       

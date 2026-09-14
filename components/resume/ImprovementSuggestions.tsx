@@ -1,10 +1,17 @@
+'use client';
+
+import * as React from 'react';
 import { ImprovementSuggestion } from '@/types/resume';
-import { Lightbulb, TrendingUp, Cloud, User, CheckSquare, Zap } from 'lucide-react';
+import { Lightbulb, TrendingUp, Cloud, User, CheckSquare, Zap, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { FixSuggestionModal } from './FixSuggestionModal';
 
 export function ImprovementSuggestions({ suggestions }: { suggestions: ImprovementSuggestion[] }) {
+  const [activeSuggestion, setActiveSuggestion] = React.useState<ImprovementSuggestion | null>(null);
+  const [appliedIds, setAppliedIds] = React.useState<Set<string>>(new Set());
+
   const getIcon = (iconName: string) => {
     switch (iconName) {
       case 'trending-up': return <TrendingUp className="w-5 h-5" />;
@@ -24,6 +31,10 @@ export function ImprovementSuggestions({ suggestions }: { suggestions: Improveme
     }
   };
 
+  const handleApply = (id: string) => {
+    setAppliedIds(prev => new Set(prev).add(id));
+  };
+
   return (
     <div className="border border-border/60 rounded-2xl bg-card shadow-sm p-6 space-y-6">
       <div className="flex items-center gap-2 text-sm font-bold text-foreground/80">
@@ -34,6 +45,8 @@ export function ImprovementSuggestions({ suggestions }: { suggestions: Improveme
       <div className="space-y-4">
         {suggestions.map(sug => {
           const styles = getPriorityStyles(sug.priority);
+          const isApplied = appliedIds.has(sug.id);
+
           return (
             <div key={sug.id} className="flex gap-4 p-4 border border-border/40 rounded-xl bg-muted/5 hover:bg-muted/10 transition-colors">
               <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", styles.icon)}>
@@ -51,7 +64,7 @@ export function ImprovementSuggestions({ suggestions }: { suggestions: Improveme
                 </p>
                 <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Estimated ATS Improvement</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Estimated ATS Impact</span>
                     <span className="text-sm font-black text-emerald-500 flex items-center bg-emerald-500/10 w-fit px-2 py-0.5 rounded-md border border-emerald-500/20">
                       {sug.estimatedImprovement}
                     </span>
@@ -61,7 +74,23 @@ export function ImprovementSuggestions({ suggestions }: { suggestions: Improveme
                     <span className="text-[10px] font-semibold text-emerald-600">
                       Impact: {sug.impact}
                     </span>
-                    <Button variant="outline" size="sm" className="text-xs h-7 shrink-0">Fix This</Button>
+                    <Button 
+                      variant={isApplied ? "secondary" : "outline"} 
+                      size="sm" 
+                      className={cn(
+                        "text-xs h-7 shrink-0 font-bold",
+                        isApplied && "bg-emerald-500/10 text-emerald-500 border-emerald-500/30 hover:bg-emerald-500/20"
+                      )}
+                      onClick={() => setActiveSuggestion(sug)}
+                    >
+                      {isApplied ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 mr-1 text-emerald-500" /> Reviewed
+                        </>
+                      ) : (
+                        'Fix This'
+                      )}
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -69,6 +98,22 @@ export function ImprovementSuggestions({ suggestions }: { suggestions: Improveme
           );
         })}
       </div>
+
+      <p className="text-[11px] text-muted-foreground/70 italic text-right">
+        *Estimated impact values are guidance approximations based on ATS parsing criteria, not guaranteed score increments.
+      </p>
+
+      <FixSuggestionModal
+        isOpen={Boolean(activeSuggestion)}
+        onClose={() => setActiveSuggestion(null)}
+        suggestion={activeSuggestion}
+        onApplyChange={() => {
+          if (activeSuggestion) {
+            handleApply(activeSuggestion.id);
+          }
+        }}
+      />
     </div>
   );
 }
+

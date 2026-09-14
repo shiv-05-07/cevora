@@ -3,6 +3,7 @@ import { UploadCloud, FileText, CheckCircle2, Loader2 } from 'lucide-react';
 import { ResumeAnalysisState } from '@/types/resume';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface UploadZoneProps {
   onUpload: (file: File) => void;
@@ -42,11 +43,30 @@ export function UploadZone({ onUpload, status, progressText }: UploadZoneProps) 
   };
 
   const handleFiles = (file: File) => {
-    // Basic validation, mock accepts anything basically
-    if (file.type === 'application/pdf' || file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+    if (!file) return;
+
+    if (file.size <= 0) {
+      toast.error('The selected file is empty.');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size exceeds the 10MB limit.');
+      return;
+    }
+
+    const nameLower = file.name.toLowerCase();
+    const isPdf = nameLower.endsWith('.pdf') || file.type.includes('pdf');
+    const isDocx =
+      nameLower.endsWith('.docx') ||
+      nameLower.endsWith('.doc') ||
+      file.type.includes('word') ||
+      file.type.includes('officedocument');
+
+    if (isPdf || isDocx) {
       onUpload(file);
     } else {
-      alert("Please upload a PDF or DOCX file.");
+      toast.error('Please upload a PDF or DOCX file.');
     }
   };
 
@@ -148,13 +168,16 @@ export function UploadZone({ onUpload, status, progressText }: UploadZoneProps) 
           </p>
         </div>
         
-        <div className="flex gap-4 items-center text-sm font-semibold text-muted-foreground mt-4">
-          <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded-md border border-border/40">
-            <FileText className="w-4 h-4 text-rose-500" /> PDF
+        <div className="flex flex-col sm:flex-row gap-3 items-center text-sm font-semibold text-muted-foreground mt-4">
+          <div className="flex gap-3 items-center">
+            <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded-md border border-border/40">
+              <FileText className="w-4 h-4 text-rose-500" /> PDF
+            </div>
+            <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded-md border border-border/40">
+              <FileText className="w-4 h-4 text-blue-500" /> DOCX
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded-md border border-border/40">
-            <FileText className="w-4 h-4 text-blue-500" /> DOCX
-          </div>
+          <span className="text-xs text-muted-foreground/80 font-medium">Max 10 MB</span>
         </div>
         
         <Button 

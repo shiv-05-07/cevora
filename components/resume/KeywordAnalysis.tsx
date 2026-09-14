@@ -13,8 +13,20 @@ interface KeywordAnalysisProps {
 
 export function KeywordAnalysis({ match, missing, top, density }: KeywordAnalysisProps) {
   const parseDensity = () => {
-    // If it says "Optimal (2-3%)", we can mock a visual bar value like 85
-    return 85; 
+    if (!density) return 70;
+    const lower = density.toLowerCase();
+    if (lower.includes('optimal') || lower.includes('balanced') || lower.includes('good')) return 85;
+    if (lower.includes('high') || lower.includes('over') || lower.includes('stuffing')) return 95;
+    if (lower.includes('low') || lower.includes('sparse') || lower.includes('thin')) return 45;
+    
+    // Extract numeric percentage if present
+    const numMatch = density.match(/(\d+(?:\.\d+)?)/);
+    if (numMatch) {
+      const val = parseFloat(numMatch[1]);
+      if (val <= 5) return Math.min(100, Math.round((val / 3.5) * 85));
+      return Math.min(100, Math.round(val));
+    }
+    return 80;
   };
 
   const getImportanceColor = (imp: string) => {

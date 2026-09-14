@@ -73,9 +73,15 @@ export function ResumeReportDialog({ isOpen, onClose, data, fileName }: ResumeRe
                   Your resume scores <strong className="text-foreground">{data.overallScore}/100</strong>, indicating it is <strong>{data.rating.toLowerCase()}</strong>. 
                   {data.recommendation}
                   <br /><br />
-                  While your structural formatting and education sections are exceptionally strong, 
-                  you are missing several key recruiter keywords such as <strong className="text-foreground">{data.missingKeywords.slice(0, 2).map(k => k.word).join(' and ')}</strong>. 
-                  Addressing the high-priority suggestions below will significantly improve your callback rate.
+                  While your structural formatting and education sections provide strong foundations, 
+                  {data.missingKeywords && data.missingKeywords.length > 0 ? (
+                    <>
+                      {' '}you are missing several key recruiter keywords such as <strong className="text-foreground">{data.missingKeywords.slice(0, 2).map(k => k.word).join(' and ')}</strong>.
+                    </>
+                  ) : (
+                    ' you have strong alignment with core role keywords.'
+                  )}
+                  {' '}Addressing the high-priority suggestions below will significantly improve your callback rate.
                 </p>
               </div>
             </div>
