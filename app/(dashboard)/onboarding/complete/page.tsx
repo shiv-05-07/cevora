@@ -3,24 +3,36 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { useOnboarding } from '@/features/onboarding/hooks/useOnboarding';
-import { CheckCircle2, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { useOnboarding } from '@/features/onboarding/hooks/useOnboarding';
+import { useProfileStore } from '@/store/useProfileStore';
+import { CheckCircle2, Loader2, Target, BookOpen, ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function CompletePage() {
   const router = useRouter();
-  const { state, clearState, prevStep } = useOnboarding();
+  const { state, clearState } = useOnboarding();
+  const { setProfile } = useProfileStore();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  const primaryGoal = state.primaryGoal || (state.goals.length > 0 ? state.goals[0] : 'Get Internship');
+  const primarySubject = state.primarySubject || (state.subjects.length > 0 ? state.subjects[0] : 'DSA');
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setError(null);
     try {
+      const payload = {
+        goals: [primaryGoal],
+        primaryGoal,
+        subjects: [primarySubject],
+        primarySubject,
+      };
+
       const res = await fetch('/api/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(state),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -28,64 +40,114 @@ export default function CompletePage() {
         throw new Error(data.error || 'Failed to save onboarding data.');
       }
 
+      // Sync local profile store so dashboard immediately has access to preferredSubjects & learningGoals
+      setProfile({
+        onboardingCompleted: true,
+        learningGoals: [primaryGoal],
+        preferredSubjects: [primarySubject],
+      });
+
       clearState();
-      // Onboarding complete, redirect to dashboard.
-      // RouteGuard will now allow access to dashboard since onboardingCompleted is true on the backend.
+
+      // Navigate to dashboard
       router.push('/dashboard');
       router.refresh();
     } catch (err: any) {
-      setError(err.message);
+      console.error('Onboarding submit error:', err);
+      setError(err.message || 'An error occurred while saving your onboarding setup.');
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-xl mx-auto w-full pt-16 pb-20 text-center">
-      <div className="mb-8 flex flex-col items-center justify-center">
-        <CheckCircle2 className="w-16 h-16 text-primary mb-4" />
-        <h1 className="text-3xl font-bold tracking-tight">You're all set!</h1>
-        <p className="text-muted-foreground mt-2">
-          We've customized your learning profile based on your preferences.
+    <div className="max-w-xl mx-auto w-full pt-8 pb-20 space-y-8 text-center sm:text-left">
+      {/* Header */}
+      <div className="space-y-3 flex flex-col items-center sm:items-start text-center sm:text-left">
+        <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-1">
+          <CheckCircle2 className="w-8 h-8" />
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
+          You&apos;re all set!
+        </h1>
+        <p className="text-sm sm:text-base font-medium text-muted-foreground leading-relaxed max-w-md">
+          We&apos;ve configured your Cevora learning journey around your primary goal and focus subject.
         </p>
       </div>
 
-      <Card className="p-6 bg-muted/50 border-border mb-8 text-left">
-        <h3 className="font-semibold mb-4 text-sm uppercase text-muted-foreground">Your Plan</h3>
-        <ul className="space-y-3 text-sm">
-          <li className="flex justify-between">
-            <span className="text-muted-foreground">Primary Goal</span>
-            <span className="font-medium text-right">{state.primaryGoal || 'Not set'}</span>
-          </li>
-          <li className="flex justify-between">
-            <span className="text-muted-foreground">Pace & Style</span>
-            <span className="font-medium text-right">{state.learningPace || 'Normal'} / {state.learningStyle || 'Mixed'}</span>
-          </li>
-          <li className="flex justify-between">
-            <span className="text-muted-foreground">Subjects</span>
-            <span className="font-medium text-right">{state.subjects.length} selected</span>
-          </li>
-          <li className="flex justify-between">
-            <span className="text-muted-foreground">Commitment</span>
-            <span className="font-medium text-right">{state.dailyStudyTime} min/day ({state.preferredStudyTime})</span>
-          </li>
-        </ul>
+      {/* Summary Card - ONLY Relevant Info */}
+      <Card className="p-6 bg-card border-border/80 shadow-2xs space-y-5 rounded-2xl">
+        <div className="flex items-center justify-between border-b border-border/40 pb-3">
+          <span className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">
+            Your Initial Setup
+          </span>
+          <span className="inline-flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
+            <Sparkles className="w-3 h-3" /> Ready
+          </span>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-2.5 text-xs font-semibold text-muted-foreground">
+              <Target className="w-4 h-4 text-primary shrink-0" />
+              <span>Primary Goal</span>
+            </div>
+            <span className="font-extrabold text-sm sm:text-base text-foreground text-right">
+              {primaryGoal}
+            </span>
+          </div>
+
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-2.5 text-xs font-semibold text-muted-foreground">
+              <BookOpen className="w-4 h-4 text-primary shrink-0" />
+              <span>Focus Subject</span>
+            </div>
+            <span className="font-extrabold text-sm sm:text-base text-foreground text-right">
+              {primarySubject}
+            </span>
+          </div>
+        </div>
       </Card>
 
+      {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 rounded-md bg-destructive/10 text-destructive text-sm text-left">
+        <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/30 text-destructive text-xs font-bold animate-in fade-in">
           {error}
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <Button variant="outline" onClick={() => { prevStep(); router.push('/onboarding/schedule'); }} disabled={isSubmitting} className="w-full sm:w-auto">
-          Back
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={() => router.push('/onboarding/subjects')}
+          disabled={isSubmitting}
+          className="w-full sm:w-auto font-bold text-xs sm:text-sm h-11 px-5 gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Subject</span>
         </Button>
-        <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full sm:w-auto">
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Enter Dashboard
+
+        <Button
+          size="lg"
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="w-full sm:w-auto font-extrabold text-xs sm:text-sm h-11 px-8 gap-2 shadow-xs"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <span>Configuring Journey...</span>
+            </>
+          ) : (
+            <>
+              <span>Enter Dashboard</span>
+              <ArrowRight className="w-4 h-4" />
+            </>
+          )}
         </Button>
       </div>
+
     </div>
   );
 }
