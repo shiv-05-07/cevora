@@ -33,7 +33,7 @@ export async function GET(
         include: {
           studentProfile: true,
           learningProfile: true,
-          knowledgeState: true,
+          knowledgeStates: true,
           skillScores: true,
           weakConcepts: {
             include: { concept: true },
@@ -58,7 +58,7 @@ export async function GET(
         include: {
           studentProfile: true,
           learningProfile: true,
-          knowledgeState: true,
+          knowledgeStates: true,
           skillScores: true,
           weakConcepts: {
             include: { concept: true },
@@ -82,7 +82,7 @@ export async function GET(
         include: {
           studentProfile: true,
           learningProfile: true,
-          knowledgeState: true,
+          knowledgeStates: true,
           skillScores: true,
           weakConcepts: {
             include: { concept: true },
@@ -100,6 +100,8 @@ export async function GET(
       });
     }
 
+    const latestKnowledgeState = student?.knowledgeStates?.[0];
+
     const payload = {
       id: student?.id || studentId,
       name: student?.fullName || (studentId === 'usr_1' ? 'Rohan Gupta' : studentId === 'usr_2' ? 'Sneha Patel' : 'Aarav Sharma'),
@@ -107,11 +109,11 @@ export async function GET(
       avatarUrl: student?.avatarUrl || null,
       college: student?.studentProfile?.college || 'Computer Science & Tech Dept',
       targetRole: student?.studentProfile?.targetRole || 'SDE-1 / Software Engineer',
-      placementReadiness: student?.knowledgeState?.placementReadiness || 'BUILDING_SKILLS',
-      readinessScore: student?.knowledgeState?.readinessScore || 62,
-      overallMastery: student?.knowledgeState?.overallMastery || 60,
-      learningVelocity: student?.knowledgeState?.learningVelocity || 1.4,
-      consistencyScore: student?.knowledgeState?.consistencyScore || 78,
+      placementReadiness: latestKnowledgeState?.placementReadiness || 'BUILDING_SKILLS',
+      readinessScore: latestKnowledgeState?.readinessScore || 62,
+      overallMastery: latestKnowledgeState?.overallMastery || 60,
+      learningVelocity: latestKnowledgeState?.learningVelocity || 1.4,
+      consistencyScore: latestKnowledgeState?.consistencyScore || 78,
       lastActive: student?.learningProfile?.lastLearningDate || new Date(),
       weakConcepts: student && student.weakConcepts.length > 0
         ? student.weakConcepts.map(w => ({

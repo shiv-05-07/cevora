@@ -67,8 +67,9 @@ export async function GET(request: NextRequest) {
       results = [...masteries, ...unattempted];
     }
 
-    const knowledgeState = await prisma.knowledgeState.findUnique({
-      where: { userId: authUser.id }
+    const knowledgeState = await prisma.knowledgeState.findFirst({
+      where: { userId: authUser.id },
+      orderBy: { updatedAt: "desc" }
     });
 
     const skillScores = await prisma.skillScore.findMany({
