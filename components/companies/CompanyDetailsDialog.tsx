@@ -129,10 +129,20 @@ export function CompanyDetailsDialog({ company, isOpen, onClose }: CompanyDetail
                   <Bookmark className="w-4 h-4 mr-2" />
                   Save Company
                 </Button>
-                <Button className="w-full font-bold h-12 text-sm shadow-sm">
-                  Apply on Portal
-                  <ExternalLink className="w-4 h-4 ml-2" />
-                </Button>
+                {company.applyUrl ? (
+                  <Button 
+                    className="w-full font-bold h-12 text-sm shadow-sm"
+                    onClick={() => window.open(company.applyUrl, '_blank')}
+                  >
+                    Apply on Portal
+                    <ExternalLink className="w-4 h-4 ml-2" />
+                  </Button>
+                ) : (
+                  <Button className="w-full font-bold h-12 text-sm shadow-sm opacity-50 cursor-not-allowed">
+                    No Portal Link
+                    <ExternalLink className="w-4 h-4 ml-2" />
+                  </Button>
+                )}
               </div>
 
             </div>

@@ -29,7 +29,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
   const { loading: authLoading, isAuthenticated, user: authUser } = useAuth();
   const [profileLoading, setProfileLoading] = React.useState(true);
   const [isAllowed, setIsAllowed] = React.useState(false);
-  const [fetchError, setFetchError] = React.useState(false);
+  const [fetchError, setFetchError] = React.useState<boolean | string>(false);
 
   React.useEffect(() => {
     // Don't act while Supabase auth state is still being read from localStorage.
@@ -57,8 +57,9 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
         }
 
         if (!res.ok) {
+          const errJson = await res.json().catch(() => ({}));
           // 5xx or unexpected error — do NOT grant access. Show error state.
-          setFetchError(true);
+          setFetchError(errJson.message || errJson.error || `HTTP ${res.status}`);
           return;
         }
 
@@ -112,9 +113,9 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
             setIsAllowed(true);
           }
         }
-      } catch {
+      } catch (err: any) {
         // Network-level failure — do NOT grant access. Show error state.
-        setFetchError(true);
+        setFetchError(err.message || "Network error");
       } finally {
         setProfileLoading(false);
       }
@@ -132,11 +133,11 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Network/server error — never grant access, show recoverable error UI.
   if (fetchError) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <p className="text-sm text-muted-foreground">Something went wrong. Please try again.</p>
+        <p className="text-xs text-red-500 font-mono max-w-lg text-center break-all">{typeof fetchError === 'string' ? fetchError : 'Unknown error'}</p>
         <button
           className="text-xs text-primary underline underline-offset-4"
           onClick={() => window.location.reload()}
