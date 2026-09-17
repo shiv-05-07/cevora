@@ -8,6 +8,7 @@ import { AppShell } from '@/components/dashboard/AppShell';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfileStore } from '@/store/useProfileStore';
+import { createClient } from '@/services/supabase/client';
 
 /**
  * RouteGuard: the SOLE authority for post-auth routing decisions.
@@ -30,34 +31,99 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
   const [profileLoading, setProfileLoading] = React.useState(true);
   const [isAllowed, setIsAllowed] = React.useState(false);
   const [fetchError, setFetchError] = React.useState(false);
+  // Ref to track in-flight fetch promise to deduplicate concurrent calls
+  const fetchPromiseRef = React.useRef<Promise<any> | null>(null);
 
   React.useEffect(() => {
     // Don't act while Supabase auth state is still being read from localStorage.
     if (authLoading) return;
 
-    // Reset state on every check so stale values don't persist across navigations.
-    setIsAllowed(false);
-    setFetchError(false);
-    setProfileLoading(true);
-
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !authUser) {
+      setIsAllowed(false);
+      setFetchError(false);
+      setProfileLoading(true);
       router.replace('/login');
-      // profileLoading stays true → renders spinner until redirect completes.
       return;
     }
 
+    const currentProfile = useProfileStore.getState().profile;
+    const hasValidLoadedProfile = Boolean(currentProfile?.id && currentProfile.id === authUser.id);
+
+    // Helper to evaluate routing rules given a user payload/profile
+    const evaluateRoutePermission = (userPayload: any) => {
+      const isTeacherOrAdmin = userPayload?.role === 'TEACHER' || userPayload?.role === 'ADMIN' || userPayload?.role === 'Teacher' || userPayload?.role === 'Admin';
+
+      if (isTeacherOrAdmin) {
+        const isAllowedTeacherPath =
+          pathname.startsWith('/teacher') ||
+          pathname.startsWith('/mentor') ||
+          pathname.startsWith('/companies') ||
+          pathname.startsWith('/settings') ||
+          pathname.startsWith('/profile');
+
+        if (!isAllowedTeacherPath) {
+          router.replace('/teacher/dashboard');
+          return false;
+        }
+        return true;
+      }
+
+      // Student flow: prevent access to teacher-only routes
+      if (pathname.startsWith('/teacher')) {
+        router.replace('/dashboard');
+        return false;
+      }
+
+      const onboardingDone = Boolean(
+        userPayload?.learningProfile?.onboardingCompleted ?? userPayload?.onboardingCompleted
+      );
+
+      if (!onboardingDone) {
+        if (!pathname.startsWith('/onboarding')) {
+          router.replace('/onboarding/goal');
+          return false;
+        }
+      } else {
+        if (pathname.startsWith('/onboarding')) {
+          router.replace('/dashboard');
+          return false;
+        }
+      }
+      return true;
+    };
+
+    // FAST PATH: Profile already fetched and synced for current authUser ID -> 0ms transition!
+    if (hasValidLoadedProfile) {
+      setFetchError(false);
+      setProfileLoading(false);
+      const allowed = evaluateRoutePermission(currentProfile);
+      setIsAllowed(allowed);
+      return;
+    }
+
+    // SLOW PATH: First time load or user change -> Fetch /api/user once (deduplicated)
+    setFetchError(false);
+    setProfileLoading(true);
+
     const checkProfile = async () => {
       try {
-        const res = await fetch('/api/user');
+        if (!fetchPromiseRef.current) {
+          fetchPromiseRef.current = fetch('/api/user').then((res) => {
+            fetchPromiseRef.current = null;
+            return res;
+          });
+        }
+        const res = await fetchPromiseRef.current;
 
         if (res.status === 401) {
-          // Session is invalid or expired. Redirect to login.
+          useProfileStore.getState().resetProfile();
+          const supabase = createClient();
+          await supabase.auth.signOut().catch(() => { });
           router.replace('/login');
           return;
         }
 
         if (!res.ok) {
-          // 5xx or unexpected error — do NOT grant access. Show error state.
           setFetchError(true);
           return;
         }
@@ -68,52 +134,9 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
         // Synchronize real authenticated user profile into store
         useProfileStore.getState().syncFromUser(user, authUser?.email);
 
-        if (user?.role === 'TEACHER' || user?.role === 'ADMIN') {
-          // Teacher/Admin flow: primary landing is /teacher/dashboard.
-          // AI Mentor (/mentor) is an AI feature accessible to both teachers and students.
-          const isAllowedTeacherPath =
-            pathname.startsWith('/teacher') ||
-            pathname.startsWith('/mentor') ||
-            pathname.startsWith('/companies') ||
-            pathname.startsWith('/settings') ||
-            pathname.startsWith('/profile');
-
-          if (!isAllowedTeacherPath) {
-            router.replace('/teacher/dashboard');
-          } else {
-            setIsAllowed(true);
-          }
-          return;
-        }
-
-        // Student flow: prevent access to teacher-only routes.
-        if (pathname.startsWith('/teacher')) {
-          router.replace('/dashboard');
-          return;
-        }
-
-        const profile = user?.learningProfile;
-        const onboardingDone = profile?.onboardingCompleted === true;
-
-        if (!onboardingDone) {
-          // Onboarding is incomplete — student must stay in /onboarding.
-          if (!pathname.startsWith('/onboarding')) {
-            router.replace('/onboarding/goal');
-            // No setIsAllowed — redirect is in flight.
-          } else {
-            setIsAllowed(true);
-          }
-        } else {
-          // Onboarding complete — student should not revisit /onboarding.
-          if (pathname.startsWith('/onboarding')) {
-            router.replace('/dashboard');
-            // No setIsAllowed — redirect is in flight.
-          } else {
-            setIsAllowed(true);
-          }
-        }
+        const allowed = evaluateRoutePermission(user);
+        setIsAllowed(allowed);
       } catch {
-        // Network-level failure — do NOT grant access. Show error state.
         setFetchError(true);
       } finally {
         setProfileLoading(false);
@@ -121,7 +144,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
     };
 
     checkProfile();
-  }, [authLoading, isAuthenticated, pathname, router]);
+  }, [authLoading, isAuthenticated, authUser, pathname, router]);
 
   // While auth or profile is loading, show a neutral spinner.
   if (authLoading || profileLoading) {
