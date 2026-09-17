@@ -21,35 +21,30 @@ export async function GET(request: NextRequest) {
       return apiResponse.error("Unauthorized", authError?.message, 401);
     }
 
-    // Fetch KnowledgeState
-    const knowledgeState = await prisma.knowledgeState.findUnique({
-      where: { userId: authUser.id }
-    });
-
-    // Fetch LearningProfile
-    const profile = await prisma.learningProfile.findUnique({
-      where: { userId: authUser.id }
-    });
-
-    // Fetch WeakConcepts
-    const weakConcepts = await prisma.weakConcept.findMany({
-      where: { userId: authUser.id },
-      include: { concept: true },
-      orderBy: { masteryScore: "asc" },
-      take: 3
-    });
-
-    // Fetch SkillScores for Radar
-    const skillScores = await prisma.skillScore.findMany({
-      where: { userId: authUser.id }
-    });
-
-    // Fetch latest snapshots
-    const snapshots = await prisma.knowledgeSnapshot.findMany({
-      where: { userId: authUser.id },
-      orderBy: { snapshotDate: "desc" },
-      take: 7
-    });
+    // Fetch independent data in parallel to optimize response time
+    const [knowledgeState, profile, weakConcepts, skillScores, snapshots] = await Promise.all([
+      prisma.knowledgeState.findFirst({
+        where: { userId: authUser.id },
+        orderBy: { updatedAt: "desc" },
+      }),
+      prisma.learningProfile.findUnique({
+        where: { userId: authUser.id },
+      }),
+      prisma.weakConcept.findMany({
+        where: { userId: authUser.id },
+        include: { concept: true },
+        orderBy: { masteryScore: "asc" },
+        take: 3,
+      }),
+      prisma.skillScore.findMany({
+        where: { userId: authUser.id },
+      }),
+      prisma.knowledgeSnapshot.findMany({
+        where: { userId: authUser.id },
+        orderBy: { snapshotDate: "desc" },
+        take: 7,
+      }),
+    ]);
 
     const latestSnapshot = snapshots[0];
     const previousSnapshot = snapshots[snapshots.length - 1];

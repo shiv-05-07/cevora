@@ -53,13 +53,13 @@ export async function GET(request: NextRequest) {
     const strugglingStudents = await prisma.user.findMany({
       where: {
         role: 'STUDENT',
-        knowledgeState: {
-          readinessScore: { lt: 65 }
+        knowledgeStates: {
+          some: { readinessScore: { lt: 65 } }
         }
       },
       include: {
         studentProfile: true,
-        knowledgeState: true,
+        knowledgeStates: { orderBy: { updatedAt: 'desc' }, take: 1 },
         weakConcepts: { include: { concept: true } }
       },
       take: 5
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
       id: st.id,
       name: st.fullName,
       batch: st.studentProfile?.degree || 'CSE 2026',
-      readinessScore: Math.round(st.knowledgeState?.readinessScore || 45),
+      readinessScore: Math.round(st.knowledgeStates[0]?.readinessScore || 45),
       weakestTopic: st.weakConcepts[0]?.concept.name || 'Core Fundamentals'
     }));
 

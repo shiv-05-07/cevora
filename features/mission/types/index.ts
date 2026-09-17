@@ -1,6 +1,6 @@
 import { Mission, MissionLesson, MissionPractice, MissionProgress, MissionStatus, RoadmapDifficulty } from '@prisma/client';
 
-export type MissionStage = 'LESSON' | 'PRACTICE' | 'REFLECTION' | 'COMPLETED';
+export type MissionStage = 'LEARN' | 'LESSON' | 'PRACTICE' | 'REVIEW' | 'REFLECTION' | 'INTERVIEW' | 'COMPLETED';
 
 export interface MissionState {
   mission: Mission;

@@ -61,25 +61,22 @@ model User {
   aiChats        AIChat[]
   roadmaps       Roadmap[]
 
-  //notes          Note[]
-  //bookmarks      Bookmark[]
-
-  //notifications  Notification[]
-
-  //achievements   Achievement[]
-
   activities UserActivity[]
 
   mockInterviews MockInterview[]
   progresses     UserProgress[]
 
-  // [NEW] Added for CEV-002 & CEV-007 Adaptive Learning & Knowledge State
+  roadmapSaves       UserRoadmapSave[]
+  roadmapProgresses  UserRoadmapProgress[]
+  lessonProgresses   UserLessonProgress[]
+
+  // Adaptive Learning & Knowledge State
   learningProfile    LearningProfile?
   diagnosticAttempts DiagnosticAttempt[]
   conceptMasteries   ConceptMastery[]
   missions           Mission[]
   learningEvents     LearningEvent[]
-  knowledgeState     KnowledgeState?
+  knowledgeStates    KnowledgeState[]
   knowledgeSnapshots KnowledgeSnapshot[]
   skillScores        SkillScore[]
   weakConcepts       WeakConcept[]
@@ -362,6 +359,44 @@ model UserProgress {
 
   @@unique([userId, roadmapId])
   @@index([roadmapId])
+}
+
+model UserRoadmapSave {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roadmapId String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, roadmapId])
+  @@index([userId])
+}
+
+model UserRoadmapProgress {
+  id                   String    @id @default(uuid()) @db.Uuid
+  userId               String    @db.Uuid
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roadmapId            String
+  startedAt            DateTime  @default(now())
+  lastAccessedAt       DateTime  @default(now())
+  lastAccessedLessonId String?
+  completedAt          DateTime?
+
+  @@unique([userId, roadmapId])
+  @@index([userId])
+}
+
+model UserLessonProgress {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roadmapId   String
+  lessonId    String
+  completed   Boolean   @default(true)
+  completedAt DateTime?
+
+  @@unique([userId, roadmapId, lessonId])
+  @@index([userId, roadmapId])
 }
 
 // ================================
@@ -782,7 +817,6 @@ model LearningProfile {
   preferredDifficulty RoadmapDifficulty @default(BEGINNER)
   learningPace        LearningPace?
 
-  // [NEW] Added for CEV-003 Onboarding
   learningGoals     String[] @default([])
   preferredSubjects String[] @default([])
 
@@ -807,14 +841,16 @@ model LearningProfile {
 }
 
 // ================================
-// KNOWLEDGE STATE & ANALYTICS (CEV-007)
+// KNOWLEDGE STATE & ANALYTICS
 // ================================
 
 model KnowledgeState {
   id String @id @default(uuid()) @db.Uuid
 
-  userId String @unique @db.Uuid
+  userId String @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  subjectKey String @default("dsa")
 
   overallMastery     Float              @default(0.0)
   placementReadiness PlacementReadiness @default(NEEDS_FOUNDATION)
@@ -825,6 +861,9 @@ model KnowledgeState {
 
   lastCalculatedAt DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  @@unique([userId, subjectKey])
+  @@index([userId, subjectKey])
 }
 
 model KnowledgeSnapshot {
@@ -855,12 +894,12 @@ model SkillScore {
   userId String @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  category      String
-  previousScore Float  @default(0.0)
-  currentScore  Float  @default(0.0)
-  accuracy      Float  @default(0.0)
-  totalAttempts Int    @default(0)
-  correctAttempts Int  @default(0)
+  category        String
+  previousScore   Float  @default(0.0)
+  currentScore    Float  @default(0.0)
+  accuracy        Float  @default(0.0)
+  totalAttempts   Int    @default(0)
+  correctAttempts Int    @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -894,7 +933,11 @@ model DiagnosticAttempt {
   userId String @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  score Float?
+  subjectKey              String   @default("dsa")
+  score                   Float?
+  recommendedStartConcept String?
+  diagnosticVersion      String?  @default("1.0")
+  analysis                Json?
 
   startedAt   DateTime  @default(now())
   completedAt DateTime?
@@ -902,6 +945,8 @@ model DiagnosticAttempt {
   responses DiagnosticResponse[]
 
   @@index([userId])
+  @@index([userId, subjectKey])
+  @@index([userId, completedAt])
 }
 
 model DiagnosticResponse {
@@ -911,6 +956,7 @@ model DiagnosticResponse {
   attempt   DiagnosticAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
   questionId     String
+  conceptKey     String?
   selectedAnswer String?
   correctAnswer  String?
   isCorrect      Boolean
@@ -924,8 +970,9 @@ model DiagnosticResponse {
 model Concept {
   id String @id @default(uuid()) @db.Uuid
 
-  name String @unique
-  slug String @unique
+  subjectKey String @default("dsa")
+  name       String @unique
+  slug       String @unique
 
   description String?
   category    String?
@@ -939,6 +986,9 @@ model Concept {
 
   masteries    ConceptMastery[]
   weakConcepts WeakConcept[]
+
+  @@index([subjectKey])
+  @@index([subjectKey, slug])
 }
 
 model ConceptMastery {
@@ -964,6 +1014,7 @@ model ConceptMastery {
   @@unique([userId, conceptId])
   @@index([userId])
   @@index([conceptId])
+  @@index([userId, lastPracticed])
 }
 
 model Mission {
@@ -986,10 +1037,14 @@ model Mission {
   dueDate     DateTime?
   completedAt DateTime?
 
-  // [NEW] Added for CEV-006 Adaptive Mission Engine
   difficulty RoadmapDifficulty @default(BEGINNER)
   progress   Float             @default(0)
   xpAwarded  Int?              @default(0)
+
+  subjectKey    String?
+  topicKey      String?
+  conceptKey    String?
+  roadmapStepId String?
 
   lessons         MissionLesson[]
   practices       MissionPractice[]
@@ -1000,6 +1055,10 @@ model Mission {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@index([userId, status])
+  @@index([userId, subjectKey])
+  @@index([subjectKey, topicKey])
+  @@index([subjectKey, conceptKey])
 }
 
 model MissionLesson {
@@ -1072,6 +1131,7 @@ model LearningEvent {
   createdAt DateTime @default(now())
 
   @@index([userId])
+  @@index([userId, createdAt])
   @@index([eventType])
 }
 
@@ -1081,14 +1141,14 @@ model PracticeAttempt {
   userId String @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  problemId   String
-  status      String   // 'Accepted', 'Wrong Answer', etc.
-  runtime     String?
-  memory      String?
+  problemId    String
+  status       String // 'Accepted', 'Wrong Answer', etc.
+  runtime      String?
+  memory       String?
   runtimeBeats Float?
   memoryBeats  Float?
 
-  concepts    String[] // the slugs of the concepts associated with this problem
+  concepts String[] // the slugs of the concepts associated with this problem
 
   createdAt DateTime @default(now())
 

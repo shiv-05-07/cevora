@@ -1,24 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAppUser } from "@/lib/auth/requireUser";
 import { userService, updateProfileSchema } from "@/services/user";
+import { logger } from "@/utils/logger";
 
 export async function GET(request: NextRequest) {
+  const startTime = Date.now();
   try {
     const { appUser } = await requireAppUser();
 
-    // Since requireAppUser always syncs and returns the full Prisma user
-    // including studentProfile and learningProfile (via queries), we can just return it.
-
+    logger.info(`[PERF] /api/user total: ${Date.now() - startTime}ms`);
 
     return NextResponse.json({
       success: true,
       data: appUser,
     });
   } catch (error: any) {
-    console.error("GET /api/user error:", error);
-    // Propagate the actual HTTP status from AppError (e.g. 401 Unauthorized)
-    // so RouteGuard can distinguish auth failures from server errors.
     const status: number = typeof error.status === 'number' ? error.status : 500;
+    if (status !== 401) {
+      console.error("GET /api/user error:", error);
+    }
     return NextResponse.json(
       { success: false, message: error.message || "Internal Server Error", error: error.code || error.message },
       { status }

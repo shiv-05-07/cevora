@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useDiagnosticStore } from '@/store/useDiagnosticStore';
 import { useKnowledgeStore } from '@/store/useKnowledgeStore';
 import { ResultSummary } from '@/components/diagnostic/ResultSummary';
-import { SkillRadar } from '@/components/diagnostic/SkillRadar';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,7 +30,7 @@ export default function DiagnosticResultPage() {
     return (
       <div className="max-w-4xl mx-auto py-20 text-center space-y-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-        <p className="text-sm font-semibold text-muted-foreground">Loading placement diagnostic evaluation report...</p>
+        <p className="text-sm font-semibold text-muted-foreground">Loading baseline diagnostic evaluation report...</p>
       </div>
     );
   }
@@ -50,7 +49,7 @@ export default function DiagnosticResultPage() {
             <div className="space-y-2">
               <h3 className="font-bold text-lg text-foreground">Diagnostic Assessment Required</h3>
               <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
-                You have not completed your placement diagnostic assessment yet. Take the 15-question adaptive assessment to generate your personalized AI learner report.
+                You have not completed your baseline diagnostic assessment yet. Take the 8-question baseline assessment to generate your personalized learning report.
               </p>
             </div>
 
@@ -68,27 +67,19 @@ export default function DiagnosticResultPage() {
     );
   }
 
-  const skillItems = Object.values(result.categoryScores).map(cs => ({
-    category: cs.category,
-    currentScore: cs.score,
-    previousScore: cs.score - cs.trend
-  }));
+  const subjectTitle = result.subjectLabel || 'Subject';
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-12">
       <PageHeader
-        title="Placement Readiness Diagnostic Report"
-        description="Your AI Learner Model has evaluated your attempt. Here is your comprehensive skill analysis, persona classification, and target roadmap."
+        title={`${subjectTitle} Diagnostic Report`}
+        description={`Your baseline assessment has evaluated your concept readiness and established your starting point for the ${subjectTitle} roadmap.`}
       />
 
       <ResultSummary
         result={result}
         onGenerateLearningPath={handleGenerateLearningPath}
       />
-
-      <div className="pt-2">
-        <SkillRadar skills={skillItems} title="Category Skill Breakdown" />
-      </div>
     </div>
   );
 }

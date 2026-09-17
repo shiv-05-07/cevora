@@ -20,7 +20,7 @@ interface DiagnosticState {
   error: string | null;
 
   // Actions
-  fetchStatus: () => Promise<void>;
+  fetchStatus: (force?: boolean) => Promise<void>;
   fetchResult: () => Promise<DiagnosticResultSummary | null>;
   startDiagnostic: () => Promise<string | null>;
   selectAnswer: (questionId: string, answerId: string) => void;
@@ -31,6 +31,8 @@ interface DiagnosticState {
   finishDiagnostic: () => Promise<DiagnosticResultSummary | null>;
   reset: () => void;
 }
+
+let statusFetchPromise: Promise<void> | null = null;
 
 export const useDiagnosticStore = create<DiagnosticState>((set, get) => ({
   status: DiagnosticStatus.PENDING,
@@ -45,24 +47,36 @@ export const useDiagnosticStore = create<DiagnosticState>((set, get) => ({
   result: null,
   error: null,
 
-  fetchStatus: async () => {
-    set({ isLoading: true, error: null });
-    try {
-      const res = await fetch('/api/diagnostic/status');
-      const data = await res.json();
-      if (data.success) {
-        const payload: DiagnosticStatusResponse = data.data;
-        set({
-          status: payload.status,
-          attemptId: payload.activeAttemptId || null,
-          isLoading: false
-        });
-      } else {
-        set({ error: data.message || 'Failed to fetch status', isLoading: false });
-      }
-    } catch (err: any) {
-      set({ error: err.message, isLoading: false });
+  fetchStatus: async (force = false) => {
+    if (!force && get().status !== DiagnosticStatus.PENDING) return;
+    if (statusFetchPromise) {
+      await statusFetchPromise;
+      return;
     }
+
+    set({ isLoading: true, error: null });
+    statusFetchPromise = (async () => {
+      try {
+        const res = await fetch('/api/diagnostic/status');
+        const data = await res.json();
+        if (data.success) {
+          const payload: DiagnosticStatusResponse = data.data;
+          set({
+            status: payload.status,
+            attemptId: payload.activeAttemptId || null,
+            isLoading: false
+          });
+        } else {
+          set({ error: data.message || 'Failed to fetch status', isLoading: false });
+        }
+      } catch (err: any) {
+        set({ error: err.message, isLoading: false });
+      } finally {
+        statusFetchPromise = null;
+      }
+    })();
+
+    await statusFetchPromise;
   },
 
   fetchResult: async () => {
