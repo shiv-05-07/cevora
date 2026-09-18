@@ -9,9 +9,14 @@ import { LearningStyle, RoadmapDifficulty, LearningPace } from '@prisma/client';
 export async function POST(req: Request) {
   try {
     const { appUser } = await requireAppUser();
+    const body: Partial<OnboardingState> = await req.json();
 
-    const state: OnboardingState = await req.json();
-    
+    const primaryGoal = body.primaryGoal || (body.goals && body.goals.length > 0 ? body.goals[0] : 'Get Internship');
+    const primarySubject = body.primarySubject || (body.subjects && body.subjects.length > 0 ? body.subjects[0] : 'DSA');
+
+    const goals = Array.from(new Set([primaryGoal, ...(body.goals || [])]));
+    const subjects = Array.from(new Set([primarySubject, ...(body.subjects || [])]));
+
     // Attempt to get the profile. If it doesn't exist, create defaults.
     let profile = await learningProfileService.getProfile(appUser.id);
     if (!profile) {
@@ -19,12 +24,12 @@ export async function POST(req: Request) {
     }
 
     const updated = await learningProfileService.updateProfile(appUser.id, {
-      learningGoals: state.goals,
-      preferredSubjects: state.subjects,
-      learningStyle: state.learningStyle || LearningStyle.VISUAL,
-      preferredDifficulty: state.difficulty || RoadmapDifficulty.BEGINNER,
-      learningPace: state.learningPace || LearningPace.NORMAL,
-      dailyGoalMinutes: state.dailyStudyTime,
+      learningGoals: goals,
+      preferredSubjects: subjects,
+      learningStyle: LearningStyle.VISUAL,
+      preferredDifficulty: RoadmapDifficulty.BEGINNER,
+      learningPace: LearningPace.NORMAL,
+      dailyGoalMinutes: 30,
       onboardingCompleted: true,
     });
 

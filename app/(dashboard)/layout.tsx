@@ -8,6 +8,7 @@ import { AppShell } from '@/components/dashboard/AppShell';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfileStore } from '@/store/useProfileStore';
+import { createClient } from '@/services/supabase/client';
 
 /**
  * RouteGuard: the SOLE authority for post-auth routing decisions.
@@ -35,23 +36,87 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
     // Don't act while Supabase auth state is still being read from localStorage.
     if (authLoading) return;
 
-    // Reset state on every check so stale values don't persist across navigations.
-    setIsAllowed(false);
-    setFetchError(false);
-    setProfileLoading(true);
-
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !authUser) {
+      setIsAllowed(false);
+      setFetchError(false);
+      setProfileLoading(true);
       router.replace('/login');
-      // profileLoading stays true → renders spinner until redirect completes.
       return;
     }
 
+    const currentProfile = useProfileStore.getState().profile;
+    const hasValidLoadedProfile = Boolean(currentProfile?.id && currentProfile.id === authUser.id);
+
+    // Helper to evaluate routing rules given a user payload/profile
+    const evaluateRoutePermission = (userPayload: any) => {
+      const isTeacherOrAdmin = userPayload?.role === 'TEACHER' || userPayload?.role === 'ADMIN' || userPayload?.role === 'Teacher' || userPayload?.role === 'Admin';
+
+      if (isTeacherOrAdmin) {
+        const isAllowedTeacherPath =
+          pathname.startsWith('/teacher') ||
+          pathname.startsWith('/mentor') ||
+          pathname.startsWith('/companies') ||
+          pathname.startsWith('/settings') ||
+          pathname.startsWith('/profile');
+
+        if (!isAllowedTeacherPath) {
+          router.replace('/teacher/dashboard');
+          return false;
+        }
+        return true;
+      }
+
+      // Student flow: prevent access to teacher-only routes
+      if (pathname.startsWith('/teacher')) {
+        router.replace('/dashboard');
+        return false;
+      }
+
+      const onboardingDone = Boolean(
+        userPayload?.learningProfile?.onboardingCompleted ?? userPayload?.onboardingCompleted
+      );
+
+      if (!onboardingDone) {
+        if (!pathname.startsWith('/onboarding')) {
+          router.replace('/onboarding/goal');
+          return false;
+        }
+      } else {
+        if (pathname.startsWith('/onboarding')) {
+          router.replace('/dashboard');
+          return false;
+        }
+      }
+      return true;
+    };
+
+    // FAST PATH: Profile already fetched and synced for current authUser ID -> 0ms transition!
+    if (hasValidLoadedProfile) {
+      setFetchError(false);
+      setProfileLoading(false);
+      const allowed = evaluateRoutePermission(currentProfile);
+      setIsAllowed(allowed);
+      return;
+    }
+
+    // SLOW PATH: First time load or user change -> Fetch /api/user once (deduplicated)
+    setFetchError(false);
+    setProfileLoading(true);
+
     const checkProfile = async () => {
       try {
-        const res = await fetch('/api/user');
+        if (!fetchPromiseRef.current) {
+          fetchPromiseRef.current = fetch('/api/user').then((res) => {
+            fetchPromiseRef.current = null;
+            return res;
+          });
+        }
+        const res = await fetchPromiseRef.current;
 
         if (res.status === 401) {
-          // Session is invalid or expired. Redirect to login.
+          useProfileStore.getState().resetProfile();
+          const supabase = createClient();
+          await supabase.auth.signOut().catch(() => { });
           router.replace('/login');
           return;
         }
@@ -122,7 +187,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
     };
 
     checkProfile();
-  }, [authLoading, isAuthenticated, pathname, router]);
+  }, [authLoading, isAuthenticated, authUser, pathname, router]);
 
   // While auth or profile is loading, show a neutral spinner.
   if (authLoading || profileLoading) {

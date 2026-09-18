@@ -47,12 +47,15 @@ interface KnowledgeStateStore {
 
   // Actions
   fetchMastery: (subject?: string, showAll?: boolean) => Promise<void>;
-  fetchWeakConcepts: () => Promise<void>;
-  fetchDashboardInsights: () => Promise<void>;
+  fetchWeakConcepts: (force?: boolean) => Promise<void>;
+  fetchDashboardInsights: (force?: boolean) => Promise<void>;
   setSelectedSubject: (subject: string) => void;
   setSearchQuery: (query: string) => void;
   setFilterLevel: (level: string) => void;
 }
+
+let weakConceptsPromise: Promise<void> | null = null;
+let dashboardInsightsPromise: Promise<void> | null = null;
 
 export const useKnowledgeStore = create<KnowledgeStateStore>((set, get) => ({
   conceptMasteries: [],
@@ -90,31 +93,55 @@ export const useKnowledgeStore = create<KnowledgeStateStore>((set, get) => ({
     }
   },
 
-  fetchWeakConcepts: async () => {
-    try {
-      const res = await fetch('/api/weak-concepts');
-      const data = await res.json();
-      if (data.success) {
-        set({ weakConcepts: data.data });
-      }
-    } catch (err) {
-      // silent handle
+  fetchWeakConcepts: async (force = false) => {
+    if (!force && get().weakConcepts.length > 0) return;
+    if (weakConceptsPromise) {
+      await weakConceptsPromise;
+      return;
     }
+
+    weakConceptsPromise = (async () => {
+      try {
+        const res = await fetch('/api/weak-concepts');
+        const data = await res.json();
+        if (data.success) {
+          set({ weakConcepts: data.data });
+        }
+      } catch (err) {
+        // silent handle
+      } finally {
+        weakConceptsPromise = null;
+      }
+    })();
+
+    await weakConceptsPromise;
   },
 
-  fetchDashboardInsights: async () => {
-    set({ isLoading: true });
-    try {
-      const res = await fetch('/api/dashboard/insights');
-      const data = await res.json();
-      if (data.success) {
-        set({ dashboardInsights: data.data, isLoading: false });
-      } else {
-        set({ isLoading: false });
-      }
-    } catch (err) {
-      set({ isLoading: false });
+  fetchDashboardInsights: async (force = false) => {
+    if (!force && get().dashboardInsights) return;
+    if (dashboardInsightsPromise) {
+      await dashboardInsightsPromise;
+      return;
     }
+
+    set({ isLoading: true });
+    dashboardInsightsPromise = (async () => {
+      try {
+        const res = await fetch('/api/dashboard/insights');
+        const data = await res.json();
+        if (data.success) {
+          set({ dashboardInsights: data.data, isLoading: false });
+        } else {
+          set({ isLoading: false });
+        }
+      } catch (err) {
+        set({ isLoading: false });
+      } finally {
+        dashboardInsightsPromise = null;
+      }
+    })();
+
+    await dashboardInsightsPromise;
   },
 
   setSelectedSubject: (subject) => {

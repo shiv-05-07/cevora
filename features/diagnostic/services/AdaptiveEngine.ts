@@ -4,7 +4,7 @@ import {
   DiagnosticQuestion, 
   CategoryAdaptiveState 
 } from '../types';
-import { diagnosticQuestions } from '../data/diagnosticQuestions';
+import { getSubjectCurriculum } from '@/lib/learning/curriculum/subjectCurriculum';
 
 export const ALL_CATEGORIES: DiagnosticCategory[] = [
   'DSA',
@@ -63,7 +63,6 @@ export class AdaptiveEngine {
       nextState.streak += 1;
       nextState.confidence = Math.min(100, nextState.confidence + 12);
 
-      // Adaptive upgrade logic per category
       if (nextState.currentDifficulty === 'BEGINNER' && nextState.streak >= 1) {
         nextState.currentDifficulty = 'INTERMEDIATE';
       } else if (nextState.currentDifficulty === 'INTERMEDIATE' && nextState.streak >= 2) {
@@ -74,7 +73,6 @@ export class AdaptiveEngine {
       nextState.mistakes += 1;
       nextState.confidence = Math.max(0, nextState.confidence - 10);
 
-      // Adaptive downgrade logic per category
       if (nextState.currentDifficulty === 'ADVANCED') {
         nextState.currentDifficulty = 'INTERMEDIATE';
       } else if (nextState.currentDifficulty === 'INTERMEDIATE') {
@@ -86,84 +84,28 @@ export class AdaptiveEngine {
   }
 
   /**
-   * Generates a randomized, balanced 15-question adaptive sequence for a new assessment session.
+   * Generates a subject-aware sequence of diagnostic questions for a user session.
+   * Uses preferredSubjects[0] to pick diagnostic questions from the central subject registry.
    */
-  static generateQuestionSequence(): DiagnosticQuestion[] {
-    const questions: DiagnosticQuestion[] = [];
-    const usedIds = new Set<string>();
+  static generateQuestionSequence(preferredSubjects?: string[] | null): DiagnosticQuestion[] {
+    const curriculum = getSubjectCurriculum(preferredSubjects);
 
-    // Shuffle pool to ensure random presentation every diagnostic run
-    const pool = shuffleArray(diagnosticQuestions);
-
-    // Step 1: Include 1 beginner question for each of the 9 categories
-    const shuffledCategories = shuffleArray(ALL_CATEGORIES);
-    for (const cat of shuffledCategories) {
-      const q = pool.find(
-        dq => dq.category === cat && dq.difficulty === 'BEGINNER' && !usedIds.has(dq.id)
-      );
-      if (q) {
-        questions.push(q);
-        usedIds.add(q.id);
-      }
+    if (curriculum && curriculum.diagnosticQuestions && curriculum.diagnosticQuestions.length > 0) {
+      return curriculum.diagnosticQuestions.map((q: any) => ({
+        id: q.id,
+        subjectKey: q.subjectKey || curriculum.key,
+        conceptKey: q.conceptKey || q.concept.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        category: curriculum.label as DiagnosticCategory,
+        concept: q.concept,
+        difficulty: q.difficulty,
+        questionType: (q.questionType as any) || 'MCQ',
+        question: q.question,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation
+      }));
     }
 
-    // Step 2: Fill remaining 6 slots with Intermediate / Advanced questions across randomized core subjects
-    for (const dq of pool) {
-      if (questions.length >= 15) break;
-      if (!usedIds.has(dq.id)) {
-        questions.push(dq);
-        usedIds.add(dq.id);
-      }
-    }
-
-    return questions;
-  }
-
-  /**
-   * Given existing answered questions and category states, selects the next adaptive question dynamically.
-   */
-  static selectNextAdaptiveQuestion(
-    answeredQuestionIds: string[],
-    categoryStates: Record<DiagnosticCategory, CategoryAdaptiveState>
-  ): DiagnosticQuestion | null {
-    const answeredSet = new Set(answeredQuestionIds);
-    if (answeredQuestionIds.length >= 15) {
-      return null;
-    }
-
-    const pool = shuffleArray(diagnosticQuestions);
-
-    // Find category with fewest questions answered so far
-    let targetCategory: DiagnosticCategory = ALL_CATEGORIES[0];
-    let minCount = Infinity;
-
-    for (const cat of ALL_CATEGORIES) {
-      const count = categoryStates[cat]?.questionsAnswered || 0;
-      if (count < minCount) {
-        minCount = count;
-        targetCategory = cat;
-      }
-    }
-
-    const targetDifficulty = categoryStates[targetCategory]?.currentDifficulty || 'BEGINNER';
-
-    // Try finding exact category + difficulty in randomized pool
-    let candidate = pool.find(
-      q => q.category === targetCategory && q.difficulty === targetDifficulty && !answeredSet.has(q.id)
-    );
-
-    // Fallback to any difficulty in target category
-    if (!candidate) {
-      candidate = pool.find(
-        q => q.category === targetCategory && !answeredSet.has(q.id)
-      );
-    }
-
-    // Ultimate fallback to any un-answered question in pool
-    if (!candidate) {
-      candidate = pool.find(q => !answeredSet.has(q.id));
-    }
-
-    return candidate || null;
+    return [];
   }
 }

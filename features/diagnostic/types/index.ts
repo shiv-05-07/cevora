@@ -1,4 +1,6 @@
 import { RoadmapDifficulty, PlacementReadiness, DiagnosticStatus } from '@prisma/client';
+import { GeminiDiagnosticAnalysis } from '@/services/intelligence/diagnosticGeminiService';
+export type { GeminiDiagnosticAnalysis };
 
 export type DiagnosticCategory = 
   | 'DSA' 
@@ -9,7 +11,10 @@ export type DiagnosticCategory =
   | 'OOP' 
   | 'SQL' 
   | 'Behavioral' 
-  | 'Communication';
+  | 'Communication'
+  | string;
+
+export type ConceptStatus = 'strong' | 'developing' | 'needs_work' | 'not_assessed';
 
 export type QuestionType = 
   | 'MCQ' 
@@ -25,6 +30,8 @@ export interface DiagnosticQuestionOption {
 
 export interface DiagnosticQuestion {
   id: string;
+  subjectKey?: string;
+  conceptKey?: string;
   category: DiagnosticCategory;
   concept: string;
   difficulty: RoadmapDifficulty;
@@ -62,6 +69,7 @@ export type LearningPersona =
 
 export interface WeakConceptDetail {
   conceptId?: string;
+  conceptKey?: string;
   concept: string;
   category: string;
   score: number;
@@ -70,9 +78,16 @@ export interface WeakConceptDetail {
 }
 
 export interface StrongConceptDetail {
+  conceptKey?: string;
   concept: string;
   category: string;
   score: number;
+}
+
+export interface NotAssessedConceptDetail {
+  conceptKey?: string;
+  concept: string;
+  category: string;
 }
 
 export interface CategoryScoreDetail {
@@ -86,16 +101,26 @@ export interface CategoryScoreDetail {
 
 export interface DiagnosticResultSummary {
   attemptId: string;
+  subjectKey?: string;
+  subjectLabel?: string;
   score: number;
   accuracy: number;
+  totalQuestions: number;
+  correctCount: number;
   placementReadiness: PlacementReadiness;
   readinessScore: number;
   persona: LearningPersona;
   weakConcepts: WeakConceptDetail[];
   strongConcepts: StrongConceptDetail[];
-  categoryScores: Record<DiagnosticCategory, CategoryScoreDetail>;
+  notAssessedConcepts: NotAssessedConceptDetail[];
+  conceptEvidence: Record<string, ConceptStatus>;
+  recommendedStartConcept: string;
+  recommendedStartTitle: string;
+  categoryScores: Record<string, CategoryScoreDetail>;
   aiExplanation: string;
   recommendedRoadmap: string;
+  geminiAnalysis?: GeminiDiagnosticAnalysis | null;
+  isFallback?: boolean;
 }
 
 export interface DiagnosticStatusResponse {

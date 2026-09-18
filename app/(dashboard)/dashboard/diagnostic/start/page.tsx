@@ -6,6 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useDiagnosticStore } from '@/store/useDiagnosticStore';
+import { useProfileStore } from '@/store/useProfileStore';
+import { getSubjectCurriculum } from '@/lib/learning/curriculum/subjectCurriculum';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { 
   Sparkles, 
@@ -22,6 +24,7 @@ import { DiagnosticStatus } from '@prisma/client';
 export default function DiagnosticStartPage() {
   const router = useRouter();
   const { status, fetchStatus, startDiagnostic, isLoading } = useDiagnosticStore();
+  const { profile } = useProfileStore();
 
   useEffect(() => {
     fetchStatus();
@@ -33,6 +36,9 @@ export default function DiagnosticStartPage() {
     }
   }, [status, router]);
 
+  const curriculum = getSubjectCurriculum(profile.preferredSubjects);
+  const subjectTitle = curriculum?.label || 'Subject';
+
   const handleBegin = async () => {
     const attemptId = await startDiagnostic();
     if (attemptId) {
@@ -43,8 +49,8 @@ export default function DiagnosticStartPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
       <PageHeader
-        title="Placement Diagnostic Assessment"
-        description="Establish your placement readiness baseline, identify weak concepts across CS core subjects, and activate your AI Learner Model."
+        title={`${subjectTitle} Diagnostic`}
+        description={`A short baseline assessment to understand what you already know and choose the right starting point for your ${subjectTitle} learning path.`}
       />
 
       <Card className="border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card shadow-lg relative overflow-hidden">
@@ -53,17 +59,17 @@ export default function DiagnosticStartPage() {
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Badge className="bg-primary text-primary-foreground font-bold px-3 py-1 text-xs flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" /> Adaptive Assessment Engine
+                <Sparkles className="w-3.5 h-3.5" /> Concept Baseline Engine
               </Badge>
               <Badge variant="outline" className="text-xs font-semibold">
                 Version 2.0
               </Badge>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-              Why the Diagnostic Assessment Matters
+              Why this baseline matters
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Cevora uses deterministic adaptive testing to construct your continuous <strong>Knowledge State</strong>. Instead of static quizzes, question difficulty automatically adapts independently per subject category based on your answers.
+              Cevora uses your answers to understand which concepts you already know, which need more practice, and where your learning path should begin.
             </p>
           </div>
 
@@ -72,19 +78,19 @@ export default function DiagnosticStartPage() {
             <div className="p-4 rounded-xl border border-border/50 bg-card space-y-1.5">
               <Clock className="w-5 h-5 text-primary" />
               <h3 className="font-bold text-sm text-foreground">Estimated Time</h3>
-              <p className="text-xs text-muted-foreground">15 Minutes • Auto-saved per answer</p>
+              <p className="text-xs text-muted-foreground">~8–10 Minutes • Auto-saved per answer</p>
             </div>
 
             <div className="p-4 rounded-xl border border-border/50 bg-card space-y-1.5">
               <HelpCircle className="w-5 h-5 text-primary" />
-              <h3 className="font-bold text-sm text-foreground">15 Questions</h3>
-              <p className="text-xs text-muted-foreground">9 Categories (DSA, DBMS, OS, SQL, etc.)</p>
+              <h3 className="font-bold text-sm text-foreground">8 Questions</h3>
+              <p className="text-xs text-muted-foreground">Subject-specific concepts</p>
             </div>
 
             <div className="p-4 rounded-xl border border-border/50 bg-card space-y-1.5">
               <BrainCircuit className="w-5 h-5 text-primary" />
-              <h3 className="font-bold text-sm text-foreground">Adaptive Progression</h3>
-              <p className="text-xs text-muted-foreground">Category-specific difficulty escalation</p>
+              <h3 className="font-bold text-sm text-foreground">Adaptive Analysis</h3>
+              <p className="text-xs text-muted-foreground">Concept-level baseline</p>
             </div>
 
             <div className="p-4 rounded-xl border border-border/50 bg-card space-y-1.5">
@@ -102,14 +108,14 @@ export default function DiagnosticStartPage() {
             <ul className="space-y-2 list-disc list-inside leading-relaxed font-medium">
               <li>Once started, you can navigate back and forth between questions before submitting.</li>
               <li>Your answers are saved continuously so progress is never lost.</li>
-              <li>Upon completion, your diagnostic baseline is locked to prevent unauthorized retakes.</li>
+              <li>Upon completion, your baseline results locked to personalize your starting roadmap.</li>
             </ul>
           </div>
 
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border/40">
             <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
               <Target className="w-4 h-4 text-primary" />
-              <span>Placement Baseline Readiness Assessment</span>
+              <span>{subjectTitle} Concept Baseline</span>
             </div>
 
             <Button
