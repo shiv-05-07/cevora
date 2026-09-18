@@ -89,14 +89,14 @@ export function CompanyCard({ recommendation }: CompanyCardProps) {
         <div className="space-y-1.5">
           <p className="text-xs font-medium text-slate-900">Skills</p>
           <div className="flex flex-wrap gap-1.5">
-             {opportunity.skills.slice(0, 3).map((skill, idx) => (
+             {(opportunity.preferredSkills || []).slice(0, 3).map((skill, idx) => (
                <Badge key={idx} variant="outline" className="text-[10px] font-normal text-slate-600 bg-slate-50 border-slate-200">
                  {skill}
                </Badge>
              ))}
-             {opportunity.skills.length > 3 && (
+             {(opportunity.preferredSkills || []).length > 3 && (
                <Badge variant="outline" className="text-[10px] font-normal text-slate-500 bg-transparent border-dashed">
-                 +{opportunity.skills.length - 3} more
+                 +{(opportunity.preferredSkills || []).length - 3} more
                </Badge>
              )}
           </div>

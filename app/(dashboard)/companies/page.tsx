@@ -57,7 +57,7 @@ export default async function CompaniesPage() {
 
   // Helper to derive realistic OA difficulty
   function deriveOaDifficulty(opp: any): 'Easy' | 'Medium' | 'Hard' {
-    if ((opp.minimumCgpa && opp.minimumCgpa >= 8.0) || opp.skills?.some((s: string) => ['C++', 'DSA', 'Algorithms'].includes(s))) {
+    if ((opp.minimumCgpa && opp.minimumCgpa >= 8.0) || (opp.preferredSkills || []).some((s: string) => ['C++', 'DSA', 'Algorithms'].includes(s))) {
       return 'Hard';
     }
     if (opp.minimumCgpa && opp.minimumCgpa >= 7.0) {

@@ -80,9 +80,6 @@ model User {
   skillScores        SkillScore[]
   weakConcepts       WeakConcept[]
   practiceAttempts   PracticeAttempt[]
-  UserLessonProgress  UserLessonProgress[]
-  UserRoadmapProgress UserRoadmapProgress[]
-  UserRoadmapSave     UserRoadmapSave[]
 
   @@index([role])
   @@index([status])
@@ -728,7 +725,6 @@ model KnowledgeState {
   confidenceScore    Float              @default(0.0)
   learningVelocity   Float              @default(0.0)
   consistencyScore   Float              @default(0.0)
-  subjectKey         String             @default("dsa")
 
   lastCalculatedAt DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -831,49 +827,10 @@ model DiagnosticResponse {
   correctAnswer  String?
   isCorrect      Boolean
   timeTaken      Int? // seconds
-  conceptKey     String?
 
   createdAt DateTime @default(now())
 
   @@index([attemptId])
-}
-
-model UserLessonProgress {
-  id          String    @id @db.Uuid
-  userId      String    @db.Uuid
-  roadmapId   String
-  lessonId    String
-  completed   Boolean   @default(true)
-  completedAt DateTime?
-  User        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, roadmapId, lessonId])
-  @@index([userId, roadmapId])
-}
-
-model UserRoadmapProgress {
-  id                   String    @id @db.Uuid
-  userId               String    @db.Uuid
-  roadmapId            String
-  startedAt            DateTime  @default(now())
-  lastAccessedAt       DateTime  @default(now())
-  lastAccessedLessonId String?
-  completedAt          DateTime?
-  User                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, roadmapId])
-  @@index([userId])
-}
-
-model UserRoadmapSave {
-  id        String   @id @db.Uuid
-  userId    String   @db.Uuid
-  roadmapId String
-  createdAt DateTime @default(now())
-  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, roadmapId])
-  @@index([userId])
 }
 
 model Concept {
@@ -887,7 +844,6 @@ model Concept {
   category    String?
 
   difficulty RoadmapDifficulty
-  subjectKey String?
 
   estimatedMinutes Int?
 

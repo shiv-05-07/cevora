@@ -40,7 +40,7 @@ export async function getSemanticMatch(
       Opportunity:
       - Title/Role: ${opportunity.title} (${opportunity.role || 'General'})
       - Target Branches: ${(opportunity.eligibleBranches || []).join(', ') || 'Any'}
-      - Required Skills: ${(opportunity.skills || []).join(', ') || 'None'}
+      - Required Skills: ${(opportunity.preferredSkills || []).join(', ') || 'None'}
       - Preferred Skills: ${(opportunity.preferredSkills || []).join(', ') || 'None'}
       
       Return ONLY a valid JSON object:
@@ -54,13 +54,22 @@ export async function getSemanticMatch(
       }
     `;
 
-    const response = await ai.models.generateContent({
-      model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+    // 2.5s strict timeout so AI never slows page load down
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Gemini API timeout (2.5s limit reached)')), 2500)
+    );
+
+    const modelName = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+
+    const generatePromise = ai.models.generateContent({
+      model: modelName,
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
       }
     });
+
+    const response = await Promise.race([generatePromise, timeoutPromise]);
 
     const resultText = response.text;
     if (!resultText) return undefined;
@@ -72,8 +81,20 @@ export async function getSemanticMatch(
 
     semanticCache.set(cacheKey, parsed);
     return parsed;
-  } catch (error) {
-    console.warn('Gemini Semantic Match skipped/failed, using deterministic scoring:', error);
+  } catch (error: any) {
+    const errMsg = error?.message || String(error);
+    const is503 = error?.status === 503 || errMsg.includes('503') || errMsg.includes('UNAVAILABLE');
+    const is429 = error?.status === 429 || errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED');
+
+    if (is503) {
+      console.warn('[Gemini AI] Model high demand (503). Using instant deterministic scoring fallback.');
+    } else if (is429) {
+      console.warn('[Gemini AI] Quota limit reached (429). Using instant deterministic scoring fallback.');
+    } else if (errMsg.includes('timeout')) {
+      console.warn('[Gemini AI] Request timed out (2.5s limit). Using instant deterministic scoring fallback.');
+    } else {
+      console.warn('[Gemini AI] Match skipped:', errMsg.split('\n')[0]);
+    }
     return undefined;
   }
 }

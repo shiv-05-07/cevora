@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
   try {
     const ai = new GoogleGenAI({ apiKey });
-    const model = (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim();
+    const model = (process.env.GEMINI_MODEL || "gemini-3.6-flash").trim();
 
     const response = await ai.models.generateContent({
       model,

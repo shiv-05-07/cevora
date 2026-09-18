@@ -84,11 +84,12 @@ function calculateMatchScore(
     score += Math.round(geminiScores.roleFit * 10);
     score += Math.round(geminiScores.branchRelevance * 5);
   } else {
-    if (opportunity.skills && opportunity.skills.length > 0 && profile.skills && profile.skills.length > 0) {
-      const matchedSkills = opportunity.skills.filter(s => 
+    const oppSkills = opportunity.preferredSkills || [];
+    if (oppSkills.length > 0 && profile.skills && profile.skills.length > 0) {
+      const matchedSkills = oppSkills.filter(s => 
         profile.skills.some(ps => ps.toLowerCase() === s.toLowerCase())
       );
-      const skillRatio = matchedSkills.length / opportunity.skills.length;
+      const skillRatio = matchedSkills.length / oppSkills.length;
       score += Math.round(skillRatio * 20);
     } else {
       score += 10;

@@ -70,19 +70,26 @@ export async function getCompanyRecommendations(userId: string, searchQuery?: st
     };
   });
 
-  // 5. Enrich top candidates with Gemini Semantic Match
-  const enrichedEvaluations = await Promise.all(
-    evaluations.map(async (evalObj) => {
-      if (evalObj.eligibility.status !== 'not_eligible' || evalObj.eligibility.failedCriteria.length <= 2) {
-        const geminiScores = await getSemanticMatch(virtualProfile, evalObj.opportunity);
-        return {
-          ...evalObj,
-          geminiScores
-        };
-      }
-      return evalObj;
-    })
+  // 5. Enrich top eligible candidates with Gemini Semantic Match (limit to top candidates to stay within Gemini 5 RPM rate limit)
+  const eligibleCandidates = evaluations.filter(
+    (e) => e.eligibility.status !== 'not_eligible' || e.eligibility.failedCriteria.length <= 1
   );
+
+  // Take top 3 eligible candidates for semantic AI match to prevent exceeding 5 RPM rate limit
+  const topForAi = eligibleCandidates.slice(0, 3);
+  const geminiScoreMap = new Map<string, any>();
+
+  for (const evalObj of topForAi) {
+    const geminiScores = await getSemanticMatch(virtualProfile, evalObj.opportunity);
+    if (geminiScores) {
+      geminiScoreMap.set(evalObj.opportunity.id, geminiScores);
+    }
+  }
+
+  const enrichedEvaluations = evaluations.map((evalObj) => {
+    const geminiScores = geminiScoreMap.get(evalObj.opportunity.id);
+    return geminiScores ? { ...evalObj, geminiScores } : evalObj;
+  });
 
   // 6. Rank recommendations
   const rankedResults = rankRecommendations(virtualProfile, enrichedEvaluations);

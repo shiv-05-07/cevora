@@ -31,6 +31,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
   const [profileLoading, setProfileLoading] = React.useState(true);
   const [isAllowed, setIsAllowed] = React.useState(false);
   const [fetchError, setFetchError] = React.useState<boolean | string>(false);
+  const fetchPromiseRef = React.useRef<Promise<Response> | null>(null);
 
   React.useEffect(() => {
     // Don't act while Supabase auth state is still being read from localStorage.
