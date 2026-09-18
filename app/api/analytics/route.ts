@@ -27,7 +27,9 @@ export async function GET(request: NextRequest) {
 
     const payload = await AnalyticsService.getAnalyticsData(authUser.id, period);
 
-    return apiResponse.success(payload, "Analytics retrieved successfully", 200);
+    const response = apiResponse.success(payload, "Analytics retrieved successfully", 200);
+    response.headers.set('Cache-Control', 'private, max-age=15, stale-while-revalidate=30');
+    return response;
   } catch (error: any) {
     logger.error("GET /api/analytics error:", error);
     if (isAppError(error)) {

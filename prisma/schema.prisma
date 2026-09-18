@@ -505,6 +505,7 @@ model Opportunity {
   @@index([companyId])
   @@index([type])
   @@index([status])
+  @@index([status, isMock])
 }
 
 enum Difficulty {
@@ -605,6 +606,7 @@ model UserActivity {
   @@index([userId])
   @@index([type])
   @@index([createdAt])
+  @@index([userId, type, createdAt])
 }
 
 // ================================
@@ -1019,4 +1021,6 @@ model PracticeAttempt {
   createdAt DateTime @default(now())
 
   @@index([userId])
+  @@index([userId, status, createdAt])
+  @@index([userId, createdAt])
 }

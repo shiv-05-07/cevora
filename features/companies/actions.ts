@@ -75,14 +75,24 @@ export async function getCompanyRecommendations(userId: string, searchQuery?: st
     (e) => e.eligibility.status !== 'not_eligible' || e.eligibility.failedCriteria.length <= 1
   );
 
-  // Take top 3 eligible candidates for semantic AI match to prevent exceeding 5 RPM rate limit
+  // Take top 3 eligible candidates for semantic AI match in parallel
   const topForAi = eligibleCandidates.slice(0, 3);
   const geminiScoreMap = new Map<string, any>();
 
-  for (const evalObj of topForAi) {
-    const geminiScores = await getSemanticMatch(virtualProfile, evalObj.opportunity);
-    if (geminiScores) {
-      geminiScoreMap.set(evalObj.opportunity.id, geminiScores);
+  const aiResults = await Promise.all(
+    topForAi.map(async (evalObj) => {
+      try {
+        const geminiScores = await getSemanticMatch(virtualProfile, evalObj.opportunity);
+        return { id: evalObj.opportunity.id, geminiScores };
+      } catch {
+        return { id: evalObj.opportunity.id, geminiScores: undefined };
+      }
+    })
+  );
+
+  for (const res of aiResults) {
+    if (res.geminiScores) {
+      geminiScoreMap.set(res.id, res.geminiScores);
     }
   }
 

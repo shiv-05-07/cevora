@@ -51,11 +51,13 @@ export class AnalyticsService {
 
     const periodDateFilter = periodStart ? { gte: periodStart } : undefined;
 
-    // Parallel Database Queries across authentic feature tables
+    // Single Parallel Database Query Batch with Minimal Field Projections
     const [
       acceptedCurrent,
       acceptedPrev,
       totalCurrent,
+      overallTotalAttempts,
+      overallAcceptedAttempts,
       userProgresses,
       interviewCountCurrent,
       snapshots,
@@ -87,69 +89,129 @@ export class AnalyticsService {
       prisma.practiceAttempt.count({
         where: { userId, createdAt: periodDateFilter },
       }),
-      // 4. User progress on roadmaps
+      // 4. Overall total attempts across all time
+      prisma.practiceAttempt.count({ where: { userId } }),
+      // 5. Overall accepted attempts across all time
+      prisma.practiceAttempt.count({ where: { userId, status: 'Accepted' } }),
+      // 6. User progress on roadmaps
       prisma.userProgress.findMany({
         where: { userId },
-        include: { roadmap: { select: { title: true } } },
+        select: {
+          progress: true,
+          completedSteps: true,
+          totalSteps: true,
+          roadmap: { select: { title: true } },
+        },
       }),
-      // 5. Completed interviews (audit log in UserActivity)
+      // 7. Completed interviews (audit log in UserActivity)
       prisma.userActivity.count({
         where: { userId, type: 'INTERVIEW', createdAt: periodDateFilter },
       }),
-      // 6. KnowledgeSnapshots for historical trend
+      // 8. KnowledgeSnapshots for historical trend
       prisma.knowledgeSnapshot.findMany({
         where: { userId, snapshotDate: periodDateFilter },
+        select: { snapshotDate: true, overallMastery: true },
         orderBy: { snapshotDate: 'asc' },
       }),
-      // 7. Practice attempts for trend and overall stats
+      // 9. Practice attempts for trend and overall stats
       prisma.practiceAttempt.findMany({
         where: { userId, createdAt: periodDateFilter },
         select: { createdAt: true, status: true, problemId: true },
         orderBy: { createdAt: 'asc' },
       }),
-      // 8. Skill scores
+      // 10. Skill scores
       prisma.skillScore.findMany({
         where: { userId },
+        select: {
+          id: true,
+          category: true,
+          currentScore: true,
+          accuracy: true,
+          totalAttempts: true,
+          updatedAt: true,
+        },
         orderBy: { currentScore: 'desc' },
       }),
-      // 9. Concept masteries
+      // 11. Concept masteries
       prisma.conceptMastery.findMany({
         where: { userId },
-        include: { concept: true },
+        select: {
+          id: true,
+          masteryScore: true,
+          attempts: true,
+          lastPracticed: true,
+          concept: {
+            select: {
+              name: true,
+              category: true,
+              subjectKey: true,
+            },
+          },
+        },
         orderBy: { masteryScore: 'desc' },
       }),
-      // 10. Latest resume analysis
+      // 12. Latest resume analysis
       prisma.resumeAnalysis.findFirst({
         where: { userId, status: 'COMPLETED' },
+        select: { overallScore: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
       }),
-      // 11. Latest interview activity
+      // 13. Latest interview activity
       prisma.userActivity.findFirst({
         where: { userId, type: 'INTERVIEW' },
+        select: { createdAt: true },
         orderBy: { createdAt: 'desc' },
       }),
-      // 12. Weak concepts
+      // 14. Weak concepts
       prisma.weakConcept.findMany({
         where: { userId },
-        include: { concept: true },
+        select: {
+          id: true,
+          masteryScore: true,
+          recommendedAction: true,
+          concept: {
+            select: {
+              name: true,
+            },
+          },
+        },
         orderBy: { masteryScore: 'asc' },
         take: 5,
       }),
-      // 13. User activities for activity stream
+      // 15. User activities for activity stream
       prisma.userActivity.findMany({
         where: { userId },
+        select: {
+          id: true,
+          type: true,
+          title: true,
+          description: true,
+          createdAt: true,
+        },
         orderBy: { createdAt: 'desc' },
         take: 10,
       }),
-      // 14. Learning events for activity stream
+      // 16. Learning events for activity stream
       prisma.learningEvent.findMany({
         where: { userId },
+        select: {
+          id: true,
+          title: true,
+          eventType: true,
+          source: true,
+          createdAt: true,
+        },
         orderBy: { createdAt: 'desc' },
         take: 10,
       }),
-      // 15. Recent resume analyses for activity stream
+      // 17. Recent resume analyses for activity stream
       prisma.resumeAnalysis.findMany({
         where: { userId },
+        select: {
+          id: true,
+          overallScore: true,
+          createdAt: true,
+        },
         orderBy: { createdAt: 'desc' },
         take: 5,
       }),
@@ -158,10 +220,6 @@ export class AnalyticsService {
     // ----------------------------------------------------
     // OVERVIEW METRICS (4 Modular Cards)
     // ----------------------------------------------------
-    const overallTotalAttempts = await prisma.practiceAttempt.count({ where: { userId } });
-    const overallAcceptedAttempts = await prisma.practiceAttempt.count({
-      where: { userId, status: 'Accepted' },
-    });
 
     const accuracyPct =
       totalCurrent > 0

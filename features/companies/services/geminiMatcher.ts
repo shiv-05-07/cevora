@@ -54,9 +54,9 @@ export async function getSemanticMatch(
       }
     `;
 
-    // 2.5s strict timeout so AI never slows page load down
+    // 1.5s strict timeout so AI never slows page load down
     const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Gemini API timeout (2.5s limit reached)')), 2500)
+      setTimeout(() => reject(new Error('Gemini API timeout (1.5s limit reached)')), 1500)
     );
 
     const modelName = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
