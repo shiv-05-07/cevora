@@ -1,65 +1,52 @@
+'use client';
+
 import * as React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function AnalyticsSkeleton() {
   return (
-    <div className="relative pb-24 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div>
-          <Skeleton className="h-8 w-64 mb-2" />
+    <div className="space-y-8 pb-16 animate-in fade-in duration-300">
+      {/* Header Skeleton */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-border/60">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
           <Skeleton className="h-4 w-96" />
         </div>
-        <Skeleton className="h-9 w-64 rounded-lg" />
+        <Skeleton className="h-10 w-48 rounded-xl" />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_200px] gap-8">
-        
-        {/* Main Content Area */}
-        <div className="space-y-16 min-w-0">
-          
-          {/* Chapter 1 */}
-          <div className="space-y-8">
-            <Skeleton className="h-4 w-32 mb-6" />
-            <Skeleton className="h-[200px] w-full rounded-xl" />
-            <Skeleton className="h-[120px] w-full rounded-xl" />
-            <Skeleton className="h-[250px] w-full rounded-xl" />
-          </div>
+      {/* Overview Metrics Skeleton */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Skeleton className="h-36 rounded-xl" />
+        <Skeleton className="h-36 rounded-xl" />
+        <Skeleton className="h-36 rounded-xl" />
+        <Skeleton className="h-36 rounded-xl" />
+      </div>
 
-          {/* Chapter 2 */}
-          <div className="space-y-8">
-            <Skeleton className="h-4 w-24 mb-6" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Skeleton className="h-[120px] w-full rounded-xl" />
-              <Skeleton className="h-[120px] w-full rounded-xl" />
-              <Skeleton className="h-[120px] w-full rounded-xl" />
-              <Skeleton className="h-[120px] w-full rounded-xl" />
-            </div>
-            <Skeleton className="h-[300px] w-full rounded-xl" />
-          </div>
+      {/* Performance Trend Chart Skeleton */}
+      <Skeleton className="h-80 w-full rounded-xl" />
 
-          {/* Chapter 3 */}
-          <div className="space-y-8">
-            <Skeleton className="h-4 w-32 mb-6" />
-            <Skeleton className="h-[400px] w-full rounded-xl" />
-            <Skeleton className="h-[300px] w-full rounded-xl" />
-          </div>
-          
+      {/* Split Row 1 Skeleton */}
+      <div className="grid grid-cols-12 gap-6">
+        <div className="col-span-12 lg:col-span-7">
+          <Skeleton className="h-96 w-full rounded-xl" />
         </div>
-
-        {/* Floating Sidebar Skeleton */}
-        <div className="hidden xl:block">
-          <div className="sticky top-24 pl-4 border-l border-border/40 space-y-4">
-            <Skeleton className="h-3 w-16 mb-4" />
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-28" />
-          </div>
+        <div className="col-span-12 lg:col-span-5">
+          <Skeleton className="h-96 w-full rounded-xl" />
         </div>
+      </div>
 
+      {/* Areas to Improve Skeleton */}
+      <Skeleton className="h-64 w-full rounded-xl" />
+
+      {/* Split Row 2 Skeleton */}
+      <div className="grid grid-cols-12 gap-6">
+        <div className="col-span-12 lg:col-span-7">
+          <Skeleton className="h-80 w-full rounded-xl" />
+        </div>
+        <div className="col-span-12 lg:col-span-5">
+          <Skeleton className="h-80 w-full rounded-xl" />
+        </div>
       </div>
     </div>
   );

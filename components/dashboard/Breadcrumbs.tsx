@@ -12,6 +12,8 @@ const ROUTE_MAP: Record<string, string> = {
   roadmaps: 'Roadmaps',
   resume: 'Resume Analyzer',
   'oa-practice': 'OA Practice',
+  company: 'Company',
+  topic: 'Topic',
   interview: 'AI Interview',
   mentor: 'AI Mentor',
   analytics: 'Analytics',
