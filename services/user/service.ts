@@ -27,13 +27,29 @@ export const userService = {
     let user = await userQueries.getUserById(payload.id);
 
     if (!user) {
-      user = await userQueries.createUser({
-        id: payload.id,
-        fullName: payload.fullName,
-        username: payload.username,
-        avatarUrl: payload.avatarUrl,
-        role: payload.role,
-      });
+      try {
+        user = await userQueries.createUser({
+          id: payload.id,
+          fullName: payload.fullName,
+          username: payload.username,
+          avatarUrl: payload.avatarUrl,
+          role: payload.role,
+        });
+      } catch (e: any) {
+        // P2002 is Prisma's unique constraint violation code
+        if (e.code === 'P2002' && e.meta?.target?.includes('username')) {
+          const randomSuffix = Math.floor(Math.random() * 10000).toString();
+          user = await userQueries.createUser({
+            id: payload.id,
+            fullName: payload.fullName,
+            username: `${payload.username}_${randomSuffix}`,
+            avatarUrl: payload.avatarUrl,
+            role: payload.role,
+          });
+        } else {
+          throw e;
+        }
+      }
     } else if (user.role === UserRole.STUDENT && !user.learningProfile) {
       await prisma.learningProfile.upsert({
         where: { userId: user.id },

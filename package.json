@@ -9,13 +9,16 @@
     "lint": "eslint",
     "postinstall": "prisma generate"
   },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
     "@google/genai": "^2.11.0",
     "@monaco-editor/react": "^4.7.0",
     "@prisma/client": "^6.16.2",
-    "@supabase/ssr": "^0.12.1",
-    "@supabase/supabase-js": "^2.110.3",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.116.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "@xyflow/react": "^12.11.2",
@@ -50,6 +53,7 @@
     "eslint-config-next": "16.2.10",
     "prisma": "^6.16.2",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5"
   }
 }

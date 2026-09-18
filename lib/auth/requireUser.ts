@@ -34,8 +34,9 @@ export async function requireAppUser() {
 
     return { authUser, appUser };
   } catch (error: any) {
+    console.error("requireAppUser sync error:", error);
     if (error instanceof AppError) throw error;
-    throw new AppError("Failed to synchronize user", "SYNC_ERROR", 500);
+    throw new AppError(`Failed to synchronize user: ${error.message || String(error)}`, "SYNC_ERROR", 500);
   }
 }
 

@@ -63,7 +63,6 @@ model User {
 
   activities UserActivity[]
 
-  mockInterviews MockInterview[]
   progresses     UserProgress[]
 
   roadmapSaves       UserRoadmapSave[]
@@ -81,6 +80,9 @@ model User {
   skillScores        SkillScore[]
   weakConcepts       WeakConcept[]
   practiceAttempts   PracticeAttempt[]
+  UserLessonProgress  UserLessonProgress[]
+  UserRoadmapProgress UserRoadmapProgress[]
+  UserRoadmapSave     UserRoadmapSave[]
 
   @@index([role])
   @@index([status])
@@ -104,6 +106,21 @@ model StudentProfile {
   graduationYear Int?
 
   cgpa Float?
+  currentSgpa Float?
+
+  branch String?
+  currentYear Int?
+  activeBacklogs Int?
+  previousBacklogs Int?
+  tenthPercentage Float?
+  twelfthPercentage Float?
+
+  opportunityTypePreference String? // INTERNSHIP, PLACEMENT, BOTH
+  preferredDomain String?
+  preferredLocation String?
+  workModePreference String? // REMOTE, HYBRID, ONSITE
+  
+  skills String[] @default([])
 
   targetRole    String?
   targetCompany String?
@@ -418,9 +435,8 @@ model Company {
   id String @id @default(uuid()) @db.Uuid
 
   name    String   @unique
-  slug    String   @unique @default(uuid()) // [NEW] Added for routing
-  active  Boolean  @default(true) // [NEW]
-  tags    String[]
+  slug    String   @unique
+  active  Boolean  @default(true)
   logoUrl String?
 
   website String?
@@ -439,12 +455,6 @@ model Company {
   updatedAt DateTime @updatedAt
 
   opportunities Opportunity[]
-
-  oaQuestions OAQuestion[]
-
-  interviewExperiences InterviewExperience[]
-
-  mockInterviews MockInterview[]
 
   @@index([name])
 }
@@ -470,123 +480,40 @@ model Opportunity {
   salaryMax Int?
   stipend   String?
 
-  applyUrl String?
+  applyUrl          String?
   officialSourceUrl String?
-  sourceType String?
-  verifiedAt DateTime?
-  expiresAt  DateTime?
+  sourceType        String?
+  verifiedAt        DateTime?
+  expiresAt         DateTime?
+  lastCheckedAt     DateTime?
+  isMock            Boolean   @default(false)
 
-  deadline DateTime?
+  deadline  DateTime?
   startDate DateTime?
 
   // High-value direct fields for fast filtering
-  minimumCgpa Float?
-  eligibleBranches String[]
+  minimumCgpa             Float?
+  minimumSgpa             Float?
+  minimum10thPercentage   Float?
+  minimum12thPercentage   Float?
+  eligibleBranches        String[]
   eligibleGraduationYears Int[]
-  maximumBacklogs Int?
+  maximumBacklogs         Int?
 
-  skills    String[]
   preferredSkills String[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  criteria OpportunityCriterion[]
-  preparationResources PreparationResource[]
 
   @@index([companyId])
   @@index([type])
   @@index([status])
 }
 
-model OpportunityCriterion {
-  id String @id @default(uuid()) @db.Uuid
-  opportunityId String @db.Uuid
-  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
-
-  criterionType String
-  operator      String
-  requiredValue String
-  isMandatory   Boolean @default(true)
-
-  sourceType    String?
-  sourceUrl     String?
-  verifiedAt    DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([opportunityId])
-}
-
-model PreparationResource {
-  id String @id @default(uuid()) @db.Uuid
-  opportunityId String @db.Uuid
-  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
-
-  title       String
-  url         String?
-  platform    String?
-  topic       String?
-  difficulty  String?
-  resourceType String?
-  estimatedDuration String?
-
-  relatedCriterion String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([opportunityId])
-}
-
 enum Difficulty {
   EASY
   MEDIUM
   HARD
-}
-
-model OAQuestion {
-  id String @id @default(uuid()) @db.Uuid
-
-  companyId String  @db.Uuid
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  title String
-
-  problemStatement String
-
-  difficulty Difficulty
-
-  topic String?
-
-  solution String?
-
-  createdAt DateTime @default(now())
-
-  @@index([companyId])
-  @@index([difficulty])
-}
-
-model InterviewExperience {
-  id String @id @default(uuid()) @db.Uuid
-
-  companyId String  @db.Uuid
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  role String
-
-  experience String
-
-  rounds Int?
-
-  result String?
-
-  postedBy String?
-
-  createdAt DateTime @default(now())
-
-  @@index([companyId])
 }
 
 // ================================
@@ -651,62 +578,6 @@ enum InterviewStatus {
   NOT_STARTED
   IN_PROGRESS
   COMPLETED
-}
-
-model MockInterview {
-  id String @id @default(uuid()) @db.Uuid
-
-  userId String @db.Uuid
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  title String
-
-  companyId String? @db.Uuid
-
-  company Company? @relation(fields: [companyId], references: [id])
-
-  role String?
-
-  mode InterviewMode
-
-  difficulty Difficulty
-
-  status InterviewStatus @default(NOT_STARTED)
-
-  startedAt DateTime?
-
-  completedAt DateTime?
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  feedback InterviewFeedback?
-
-  @@index([userId])
-  @@index([status])
-}
-
-model InterviewFeedback {
-  id String @id @default(uuid()) @db.Uuid
-
-  interviewId String @unique @db.Uuid
-
-  interview MockInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
-
-  overallScore Int?
-
-  communication Int?
-
-  technicalKnowledge Int?
-
-  confidence Int?
-
-  problemSolving Int?
-
-  analysis Json?
-
-  createdAt DateTime @default(now())
 }
 
 enum ActivityType {
@@ -857,6 +728,7 @@ model KnowledgeState {
   confidenceScore    Float              @default(0.0)
   learningVelocity   Float              @default(0.0)
   consistencyScore   Float              @default(0.0)
+  subjectKey         String             @default("dsa")
 
   lastCalculatedAt DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -925,17 +797,16 @@ model WeakConcept {
   @@unique([userId, conceptId])
   @@index([userId])
 }
-
 model DiagnosticAttempt {
   id String @id @default(uuid()) @db.Uuid
 
   userId String @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  subjectKey              String   @default("dsa")
   score                   Float?
+  diagnosticVersion       String?              @default("1.0")
+  subjectKey              String               @default("dsa")
   recommendedStartConcept String?
-  diagnosticVersion      String?  @default("1.0")
   analysis                Json?
 
   startedAt   DateTime  @default(now())
@@ -944,8 +815,8 @@ model DiagnosticAttempt {
   responses DiagnosticResponse[]
 
   @@index([userId])
-  @@index([userId, subjectKey])
   @@index([userId, completedAt])
+  @@index([userId, subjectKey])
 }
 
 model DiagnosticResponse {
@@ -960,10 +831,49 @@ model DiagnosticResponse {
   correctAnswer  String?
   isCorrect      Boolean
   timeTaken      Int? // seconds
+  conceptKey     String?
 
   createdAt DateTime @default(now())
 
   @@index([attemptId])
+}
+
+model UserLessonProgress {
+  id          String    @id @db.Uuid
+  userId      String    @db.Uuid
+  roadmapId   String
+  lessonId    String
+  completed   Boolean   @default(true)
+  completedAt DateTime?
+  User        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roadmapId, lessonId])
+  @@index([userId, roadmapId])
+}
+
+model UserRoadmapProgress {
+  id                   String    @id @db.Uuid
+  userId               String    @db.Uuid
+  roadmapId            String
+  startedAt            DateTime  @default(now())
+  lastAccessedAt       DateTime  @default(now())
+  lastAccessedLessonId String?
+  completedAt          DateTime?
+  User                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roadmapId])
+  @@index([userId])
+}
+
+model UserRoadmapSave {
+  id        String   @id @db.Uuid
+  userId    String   @db.Uuid
+  roadmapId String
+  createdAt DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roadmapId])
+  @@index([userId])
 }
 
 model Concept {
@@ -977,6 +887,7 @@ model Concept {
   category    String?
 
   difficulty RoadmapDifficulty
+  subjectKey String?
 
   estimatedMinutes Int?
 

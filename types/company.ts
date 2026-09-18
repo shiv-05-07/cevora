@@ -39,5 +39,6 @@ export interface Company {
   oaDifficulty: Difficulty;
   interviewDifficulty: Difficulty;
   description: string;
+  applyUrl?: string;
   experiences?: InterviewExperience[];
 }

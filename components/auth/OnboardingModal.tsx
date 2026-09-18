@@ -489,7 +489,17 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                       {communityError && <p className="text-[11px] text-destructive">{communityError}</p>}
                     </div>
                     {signupError && (
-                      <p className="text-sm font-medium text-destructive mt-3 mb-1">{signupError}</p>
+                      <div className="mt-3 mb-1">
+                        <p className="text-sm font-medium text-destructive">{signupError}</p>
+                        {signupError.toLowerCase().includes('already registered') && (
+                          <button 
+                            onClick={() => { onClose(); router.push('/login'); }} 
+                            className="text-xs text-primary underline mt-1 font-medium hover:text-primary/80 transition-colors"
+                          >
+                            Log in instead
+                          </button>
+                        )}
+                      </div>
                     )}
                     <div className="flex gap-3">
                       <Button variant="outline" onClick={() => goBack('role')} className="flex-1" disabled={isSubmitting}>
@@ -526,7 +536,17 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                       {communityError && <p className="text-[11px] text-destructive">{communityError}</p>}
                     </div>
                     {signupError && (
-                      <p className="text-sm font-medium text-destructive mb-3">{signupError}</p>
+                      <div className="mb-3">
+                        <p className="text-sm font-medium text-destructive">{signupError}</p>
+                        {signupError.toLowerCase().includes('already registered') && (
+                          <button 
+                            onClick={() => { onClose(); router.push('/login'); }} 
+                            className="text-xs text-primary underline mt-1 font-medium hover:text-primary/80 transition-colors"
+                          >
+                            Log in instead
+                          </button>
+                        )}
+                      </div>
                     )}
                     <Button
                       className="w-full h-11 text-sm font-semibold shadow-sm"

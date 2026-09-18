@@ -149,3 +149,13 @@ scratch/
 
 # Generated local reports
 Cevora_ATS_Report_*.pdf
+
+# IDE & OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Vercel & Turbo
+.vercel/
+.turbo/

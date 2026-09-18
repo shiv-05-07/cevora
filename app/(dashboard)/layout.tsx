@@ -30,9 +30,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
   const { loading: authLoading, isAuthenticated, user: authUser } = useAuth();
   const [profileLoading, setProfileLoading] = React.useState(true);
   const [isAllowed, setIsAllowed] = React.useState(false);
-  const [fetchError, setFetchError] = React.useState(false);
-  // Ref to track in-flight fetch promise to deduplicate concurrent calls
-  const fetchPromiseRef = React.useRef<Promise<any> | null>(null);
+  const [fetchError, setFetchError] = React.useState<boolean | string>(false);
 
   React.useEffect(() => {
     // Don't act while Supabase auth state is still being read from localStorage.
@@ -124,7 +122,9 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
         }
 
         if (!res.ok) {
-          setFetchError(true);
+          const errJson = await res.json().catch(() => ({}));
+          // 5xx or unexpected error — do NOT grant access. Show error state.
+          setFetchError(errJson.message || errJson.error || `HTTP ${res.status}`);
           return;
         }
 
@@ -134,10 +134,53 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
         // Synchronize real authenticated user profile into store
         useProfileStore.getState().syncFromUser(user, authUser?.email);
 
-        const allowed = evaluateRoutePermission(user);
-        setIsAllowed(allowed);
-      } catch {
-        setFetchError(true);
+        if (user?.role === 'TEACHER' || user?.role === 'ADMIN') {
+          // Teacher/Admin flow: primary landing is /teacher/dashboard.
+          // AI Mentor (/mentor) is an AI feature accessible to both teachers and students.
+          const isAllowedTeacherPath =
+            pathname.startsWith('/teacher') ||
+            pathname.startsWith('/mentor') ||
+            pathname.startsWith('/companies') ||
+            pathname.startsWith('/settings') ||
+            pathname.startsWith('/profile');
+
+          if (!isAllowedTeacherPath) {
+            router.replace('/teacher/dashboard');
+          } else {
+            setIsAllowed(true);
+          }
+          return;
+        }
+
+        // Student flow: prevent access to teacher-only routes.
+        if (pathname.startsWith('/teacher')) {
+          router.replace('/dashboard');
+          return;
+        }
+
+        const profile = user?.learningProfile;
+        const onboardingDone = profile?.onboardingCompleted === true;
+
+        if (!onboardingDone) {
+          // Onboarding is incomplete — student must stay in /onboarding.
+          if (!pathname.startsWith('/onboarding')) {
+            router.replace('/onboarding/goal');
+            // No setIsAllowed — redirect is in flight.
+          } else {
+            setIsAllowed(true);
+          }
+        } else {
+          // Onboarding complete — student should not revisit /onboarding.
+          if (pathname.startsWith('/onboarding')) {
+            router.replace('/dashboard');
+            // No setIsAllowed — redirect is in flight.
+          } else {
+            setIsAllowed(true);
+          }
+        }
+      } catch (err: any) {
+        // Network-level failure — do NOT grant access. Show error state.
+        setFetchError(err.message || "Network error");
       } finally {
         setProfileLoading(false);
       }
@@ -155,11 +198,11 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Network/server error — never grant access, show recoverable error UI.
   if (fetchError) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <p className="text-sm text-muted-foreground">Something went wrong. Please try again.</p>
+        <p className="text-xs text-red-500 font-mono max-w-lg text-center break-all">{typeof fetchError === 'string' ? fetchError : 'Unknown error'}</p>
         <button
           className="text-xs text-primary underline underline-offset-4"
           onClick={() => window.location.reload()}
