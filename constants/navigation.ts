@@ -14,8 +14,7 @@ import {
   Users,
   Compass,
   Info,
-  BookOpen,
-  BrainCircuit
+  BookOpen
 } from 'lucide-react';
 
 export const LANDING_NAVIGATION = [
@@ -37,7 +36,6 @@ export const MAIN_NAVIGATION = [
   { label: 'Study Assistant', href: '/study-assistant', icon: BookOpen },
   { label: 'AI Interview', href: '/interview', icon: Video },
   { label: 'AI Mentor', href: '/mentor', icon: Bot },
-  { label: 'Concept Mastery', href: '/dashboard/concepts', icon: BrainCircuit },
   { label: 'Analytics', href: '/analytics', icon: BarChart3 },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
@@ -51,7 +49,6 @@ export const WORKSPACE_NAVIGATION = [
   { label: 'Study Assistant', href: '/study-assistant', icon: BookOpen },
   { label: 'AI Interview', href: '/interview', icon: Video },
   { label: 'AI Mentor', href: '/mentor', icon: Bot },
-  { label: 'Concept Mastery', href: '/dashboard/concepts', icon: BrainCircuit },
   { label: 'Analytics', href: '/analytics', icon: BarChart3 },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
