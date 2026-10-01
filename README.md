@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Cevora Banner](https://raw.githubusercontent.com/shiv-05-07/cevora/main/public/icon.jpg)
+![Cevora Banner](https://raw.githubusercontent.com/shiv-05-07/cevora/main/public/logo-dark.jpg)
 
 ### AI-Powered Placement Intelligence & Adaptive Learning Platform
 
