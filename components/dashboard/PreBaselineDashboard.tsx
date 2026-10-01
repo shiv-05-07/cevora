@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import {
   Target,
   BookOpen,
@@ -10,7 +9,6 @@ import {
   Sparkles,
   ArrowRight,
   CheckCircle2,
-  ShieldAlert,
   Map,
   FileSearch,
   Bot,

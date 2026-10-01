@@ -117,7 +117,7 @@ export function deriveSkillStateMap(
 
   const categoryScore = scoreMap.get(curriculum.key.toUpperCase()) || scoreMap.get(curriculum.label.toUpperCase());
 
-  const skills: SkillItem[] = curriculum.roadmapSteps.map((step: any, idx: number) => {
+  const skills: SkillItem[] = curriculum.roadmapSteps.map((step: { id: string; title: string }, idx: number) => {
     const topicLower = step.title.toLowerCase();
     const isExplicitlyWeak = Array.from(weakConceptNames).some((w) => topicLower.includes(w) || w.includes(topicLower));
 
@@ -154,9 +154,15 @@ export function deriveSkillStateMap(
  */
 export function deriveTodaysMission(
   profile: Partial<UserProfile> = {},
-  weakConcepts: Array<any> = [],
-  insights?: DashboardInsights | null,
-  activeMission?: any | null
+  _weakConcepts?: unknown[],
+  _insights?: DashboardInsights | null,
+  activeMission?: {
+    status?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+    title?: string;
+    description?: string;
+    content?: { topic?: string };
+    missionProgress?: { currentStage?: string };
+  } | null
 ): TodaysMissionData {
   const curriculum = getSubjectCurriculum(profile.preferredSubjects);
 
@@ -193,10 +199,10 @@ export function deriveTodaysMission(
     if (currentStage === 'LESSON') currentStage = 'LEARN';
     if (currentStage === 'REFLECTION') currentStage = 'REVIEW';
 
-    const rawTopic = (activeMission.content as any)?.topic || activeMission.title;
+    const rawTopic = activeMission.content?.topic || activeMission.title;
     if (rawTopic) {
       const matchedMission = curriculum.missions.find(
-        (m: any) => topicMatches(m.title, rawTopic) || topicMatches(m.topicKey, rawTopic)
+        (m: { title: string; topicKey?: string }) => topicMatches(m.title, rawTopic) || topicMatches(m.topicKey, rawTopic)
       );
 
       if (matchedMission) {
@@ -347,7 +353,7 @@ export function deriveRoadmapFocus(
 
   // Match current mission topic with roadmap steps via topicKey or title
   const matchedMission = curriculum.missions.find(
-    (m: any) =>
+    (m: { title: string; topicKey?: string }) =>
       (missionTopic && (m.title === missionTopic || m.topicKey === missionTopic)) ||
       (missionTopic && topicMatches(m.title, missionTopic)) ||
       (missionTopic && topicMatches(m.topicKey, missionTopic))
@@ -357,14 +363,14 @@ export function deriveRoadmapFocus(
   const activeTopic = missionTopic || curriculum.roadmapSteps[0].title;
 
   const matchedIndex = curriculum.roadmapSteps.findIndex(
-    (s: any) =>
+    (s: { title: string; topicKey?: string }) =>
       (activeTopicKey && s.topicKey === activeTopicKey) ||
       topicMatches(s.title, activeTopic) ||
       topicMatches(s.topicKey, activeTopic)
   );
   const activeIdx = matchedIndex >= 0 ? matchedIndex : 0;
 
-  const steps: RoadmapStep[] = curriculum.roadmapSteps.map((step: any, idx: number) => {
+  const steps: RoadmapStep[] = curriculum.roadmapSteps.map((step: { id: string; title: string }, idx: number) => {
     let status: 'completed' | 'current' | 'upcoming';
     let isFocus = false;
 
@@ -470,8 +476,8 @@ export function deriveCareerMilestones(profile: Partial<UserProfile> = {}): Care
   */
 export function deriveLearningInsight(
   profile: Partial<UserProfile> = {},
-  weakConcepts: Array<any> = [],
-  insights?: DashboardInsights | null,
+  _weakConcepts?: unknown[],
+  _insights?: DashboardInsights | null,
   activeTopic?: string
 ): LearningInsightData {
   const curriculum = getSubjectCurriculum(profile.preferredSubjects);

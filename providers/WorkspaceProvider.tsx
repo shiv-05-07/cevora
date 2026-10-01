@@ -52,17 +52,17 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     return isTeacher ? TEACHER_BATCHES[0].id : defaultStudentWorkspace.id;
   });
 
-  // Re-hydrate active workspace if profile ID changes
-  React.useEffect(() => {
+  const [prevProfileId, setPrevProfileId] = React.useState(profile.id);
+  if (profile.id !== prevProfileId) {
+    setPrevProfileId(profile.id);
     if (typeof window !== 'undefined' && profile.id && isTeacher) {
       const saved = localStorage.getItem(`cevora_active_batch_${profile.id}`);
-      if (saved && TEACHER_BATCHES.some((b) => b.id === saved)) {
-        setActiveWorkspaceId(saved);
-      } else {
-        setActiveWorkspaceId(TEACHER_BATCHES[0].id);
+      const target = (saved && TEACHER_BATCHES.some((b) => b.id === saved)) ? saved : TEACHER_BATCHES[0].id;
+      if (activeWorkspaceId !== target) {
+        setActiveWorkspaceId(target);
       }
     }
-  }, [profile.id, isTeacher]);
+  }
 
   const currentWorkspace = React.useMemo(() => {
     if (isTeacher) {
